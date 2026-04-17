@@ -30,6 +30,7 @@ import (
 	"github.com/blog/blog-community/pkg/cache"
 	"github.com/blog/blog-community/pkg/logger"
 	"github.com/blog/blog-community/pkg/middleware"
+	"github.com/blog/blog-community/pkg/search"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
@@ -72,12 +73,26 @@ func main() {
 	}
 	tokenStore := auth.NewRedisTokenStore(redisClient)
 
+	// Connect to Elasticsearch (optional, log warning if unavailable)
+	var esClient *search.Client
+	if cfg.ElasticsearchAddr != "" {
+		esClient, err = search.NewClient([]string{cfg.ElasticsearchAddr})
+		if err != nil {
+			log.Warn("failed to create elasticsearch client, search will fallback to DB", zap.Error(err))
+		} else if err := esClient.Ping(ctx); err != nil {
+			log.Warn("elasticsearch unavailable, search will fallback to DB", zap.Error(err))
+			esClient = nil
+		} else {
+			log.Info("elasticsearch connected", zap.String("addr", cfg.ElasticsearchAddr))
+		}
+	}
+
 	// Initialize notification usecase first (used as notifier by other modules)
 	notificationUC := notification.InitializeUseCase(client)
 
 	// Wire up handlers — each module owns its own route registration
 	userServer := user.InitializeServer(cfg, client, tokenStore)
-	postHandler := post.InitializeHandler(client, redisClient)
+	postHandler := post.InitializeHandler(client, redisClient, esClient)
 	commentHandler := comment.InitializeHandler(client, notificationUC)
 	interactionHandler := interaction.InitializeHandler(client, redisClient, notificationUC)
 	followHandler := follow.InitializeHandler(client, notificationUC)

@@ -18,6 +18,7 @@ func (s *PostServer) Register(r *gin.RouterGroup, auth gin.HandlerFunc) {
 	r.GET("/posts/:id", s.handler.GetByID)
 	r.GET("/posts/:id/related", s.handler.GetRelated)
 	r.GET("/search/hot", s.handler.HotKeywords)
+	r.GET("/search", s.handler.Search)
 
 	authGroup := r.Group("/")
 	authGroup.Use(auth)

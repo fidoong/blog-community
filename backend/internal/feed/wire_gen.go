@@ -10,9 +10,9 @@ import (
 	"github.com/blog/blog-community/internal/ent"
 	application2 "github.com/blog/blog-community/internal/feed/application"
 	"github.com/blog/blog-community/internal/feed/delivery"
-	followinfra "github.com/blog/blog-community/internal/follow/infrastructure"
+	infrastructure2 "github.com/blog/blog-community/internal/follow/infrastructure"
 	"github.com/blog/blog-community/internal/post/application"
-	postinfra "github.com/blog/blog-community/internal/post/infrastructure"
+	"github.com/blog/blog-community/internal/post/infrastructure"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -20,11 +20,18 @@ import (
 
 // InitializeHandler injects feed dependencies.
 func InitializeHandler(client *ent.Client, redisClient *redis.Client) *delivery.FeedHandler {
-	postRepository := postinfra.NewEntPostRepo(client)
-	searchTrendRepo := postinfra.NewSearchTrendRepo(redisClient)
-	useCase := application.NewPostUseCase(postRepository, searchTrendRepo)
-	entFollowRepo := followinfra.NewEntFollowRepo(client)
-	domainUseCase := application2.NewFeedUseCase(useCase, entFollowRepo)
+	postRepository := infrastructure.NewEntPostRepo(client)
+	searchTrendRepo := infrastructure.NewSearchTrendRepo(redisClient)
+	postIndexer := nilPostIndexer()
+	useCase := application.NewPostUseCase(postRepository, searchTrendRepo, postIndexer)
+	repository := infrastructure2.NewEntFollowRepo(client)
+	domainUseCase := application2.NewFeedUseCase(useCase, repository)
 	feedHandler := delivery.NewFeedHandler(domainUseCase)
 	return feedHandler
+}
+
+// wire.go:
+
+func nilPostIndexer() application.PostIndexer {
+	return nil
 }

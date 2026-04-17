@@ -1,8 +1,10 @@
 package delivery
 
 import (
+	"fmt"
 	"strconv"
 	stderrors "errors"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/blog/blog-community/pkg/errors"
@@ -273,6 +275,107 @@ func (h *PostHandler) HotKeywords(c *gin.Context) {
 		return
 	}
 	response.Success(c.Writer, gin.H{"list": keywords})
+}
+
+func (h *PostHandler) Search(c *gin.Context) {
+	keyword := c.Query("q")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
+
+	if keyword == "" {
+		c.Error(errors.ErrInvalidInput)
+		return
+	}
+
+	result, err := h.useCase.Search(c.Request.Context(), keyword, page, pageSize)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	type searchHitResponse struct {
+		ID         uint64            `json:"id"`
+		Title      string            `json:"title"`
+		Summary    string            `json:"summary"`
+		Content    string            `json:"content,omitempty"`
+		AuthorID   uint64            `json:"authorId"`
+		AuthorName string            `json:"authorName"`
+		Tags       []string          `json:"tags"`
+		ViewCount  int               `json:"viewCount"`
+		LikeCount  int               `json:"likeCount"`
+		CommentCount int             `json:"commentCount"`
+		CreatedAt  int64             `json:"createdAt"`
+		Highlight  map[string][]string `json:"highlight,omitempty"`
+		Score      float64           `json:"score"`
+	}
+
+	list := make([]searchHitResponse, len(result.Hits))
+	for i, hit := range result.Hits {
+		var id uint64
+		fmt.Sscanf(hit.ID, "%d", &id)
+		
+		s := hit.Source
+		r := searchHitResponse{
+			ID:         id,
+			Score:      hit.Score,
+			Highlight:  hit.Highlight,
+		}
+		if v, ok := s["title"].(string); ok {
+			r.Title = v
+		}
+		if v, ok := s["summary"].(string); ok {
+			r.Summary = v
+		}
+		if v, ok := s["content"].(string); ok {
+			r.Content = v
+		}
+		if v, ok := s["author_name"].(string); ok {
+			r.AuthorName = v
+		}
+		if v, ok := s["author_id"].(float64); ok {
+			r.AuthorID = uint64(v)
+		}
+		if v, ok := s["view_count"].(float64); ok {
+			r.ViewCount = int(v)
+		}
+		if v, ok := s["like_count"].(float64); ok {
+			r.LikeCount = int(v)
+		}
+		if v, ok := s["comment_count"].(float64); ok {
+			r.CommentCount = int(v)
+		}
+		if v, ok := s["tags"].([]any); ok {
+			tags := make([]string, len(v))
+			for j, t := range v {
+				if ts, ok := t.(string); ok {
+					tags[j] = ts
+				}
+			}
+			r.Tags = tags
+		}
+		if v, ok := s["created_at"].(string); ok {
+			if t, err := time.Parse(time.RFC3339, v); err == nil {
+				r.CreatedAt = t.Unix()
+			}
+		}
+		list[i] = r
+	}
+
+	totalPages := int(result.Total) / pageSize
+	if int(result.Total)%pageSize > 0 {
+		totalPages++
+	}
+
+	response.Success(c.Writer, gin.H{
+		"list": list,
+		"pagination": response.Pagination{
+			Total:      result.Total,
+			Page:       page,
+			PageSize:   pageSize,
+			TotalPages: totalPages,
+		},
+		"took": result.TookMillis,
+	})
 }
 
 func toPostResponse(p *domain.Post, withContent bool) postResponse {

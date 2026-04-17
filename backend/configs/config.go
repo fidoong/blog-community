@@ -27,6 +27,8 @@ type Config struct {
 	FrontendURL string `mapstructure:"frontend_url"`
 	APIBaseURL  string `mapstructure:"api_base_url"`
 
+	ElasticsearchAddr string `mapstructure:"elasticsearch_addr"`
+
 	GitHubClientID     string `mapstructure:"github_client_id"`
 	GitHubClientSecret string `mapstructure:"github_client_secret"`
 	GoogleClientID     string `mapstructure:"google_client_id"`
@@ -54,6 +56,7 @@ func Load() (*Config, error) {
 	v.SetDefault("jwt_secret", "super-secret-key-change-in-production")
 	v.SetDefault("frontend_url", "http://localhost:3000")
 	v.SetDefault("api_base_url", "http://localhost:8080/api/v1")
+	v.SetDefault("elasticsearch_addr", "http://localhost:9200")
 
 	// Enable .env file support
 	v.SetConfigName(".env")
