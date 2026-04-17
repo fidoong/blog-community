@@ -47,7 +47,7 @@ func (h *CommentHandler) Create(c *gin.Context) {
 		return
 	}
 
-	postIDStr := c.Param("postId")
+	postIDStr := c.Param("id")
 	postID, err := strconv.ParseUint(postIDStr, 10, 64)
 	if err != nil {
 		c.Error(errors.ErrInvalidInput)
@@ -74,7 +74,7 @@ func (h *CommentHandler) Create(c *gin.Context) {
 }
 
 func (h *CommentHandler) List(c *gin.Context) {
-	postIDStr := c.Param("postId")
+	postIDStr := c.Param("id")
 	postID, err := strconv.ParseUint(postIDStr, 10, 64)
 	if err != nil {
 		c.Error(errors.ErrInvalidInput)
