@@ -42,6 +42,9 @@ if [[ ! -f "$ENV_FILE" ]]; then
     exit 1
 fi
 
+# Viper 会自动读取 .env 文件，这里只需确保在工作目录下运行
+cd "$BACKEND_DIR"
+
 # 检查 .env 中的端口是否匹配
 env_port=$(grep "^HTTP_PORT=" "$ENV_FILE" | cut -d= -f2 | tr -d ' ')
 if [[ -n "$env_port" && "$env_port" != "$PORT" ]]; then
@@ -97,9 +100,6 @@ echo -e "${GREEN}✓ 编译通过${NC}"
 # 启动服务
 echo "→ 启动服务..."
 cd "$BACKEND_DIR"
-set -a
-source "$ENV_FILE"
-set +a
 
 nohup go run ./cmd/api-service > "$LOG_FILE" 2>&1 &
 new_pid=$!
