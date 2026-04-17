@@ -9,10 +9,10 @@ package user
 import (
 	"github.com/blog/blog-community/configs"
 	"github.com/blog/blog-community/internal/ent"
-	"github.com/blog/blog-community/pkg/auth"
 	"github.com/blog/blog-community/internal/user/application"
 	"github.com/blog/blog-community/internal/user/delivery"
 	"github.com/blog/blog-community/internal/user/infrastructure"
+	"github.com/blog/blog-community/pkg/auth"
 )
 
 // Injectors from wire.go:
