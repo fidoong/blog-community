@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { useComments, useCreateComment } from "@/hooks/queries/use-comments";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/stores/auth-store";
 import type { Comment } from "@/types/comment";
 
-function CommentItem({ comment, onReply }: { comment: Comment; postId: string | number; onReply: (parentId: number) => void }) {
+function CommentItem({ comment, onReply, index = 0 }: { comment: Comment; postId: string | number; onReply: (parentId: number) => void; index?: number }) {
   // 生成用户头像显示文本（取ID后3位或首字母）
   const getAvatarText = (authorId: number) => {
     const idStr = String(authorId);
@@ -16,7 +17,16 @@ function CommentItem({ comment, onReply }: { comment: Comment; postId: string | 
   };
 
   return (
-    <div className="py-5">
+    <motion.div 
+      className="py-5"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ 
+        duration: 0.3, 
+        delay: index * 0.05,
+        ease: "easeOut" 
+      }}
+    >
       <div className="flex items-start gap-3">
         {/* 头像 */}
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold">
@@ -94,7 +104,7 @@ function CommentItem({ comment, onReply }: { comment: Comment; postId: string | 
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -166,12 +176,13 @@ export function CommentSection({ postId }: { postId: string | number }) {
             </div>
           </>
         )}
-        {data?.list.map((comment) => (
+        {data?.list.map((comment, index) => (
           <CommentItem
             key={comment.id}
             comment={comment}
             postId={postId}
             onReply={setReplyTo}
+            index={index}
           />
         ))}
         {!isLoading && data?.list.length === 0 && (

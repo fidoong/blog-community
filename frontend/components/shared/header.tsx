@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuthStore } from "@/stores/auth-store";
@@ -20,7 +21,12 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
+    <motion.header 
+      className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md"
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+    >
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6 lg:px-8">
         <div className="flex items-center gap-8">
           <Link href="/" className="text-xl font-bold tracking-tight hover:text-foreground/80 transition-colors">
@@ -76,6 +82,6 @@ export function Header() {
           )}
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 }
