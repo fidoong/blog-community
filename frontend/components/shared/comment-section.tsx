@@ -9,38 +9,84 @@ import { useAuthStore } from "@/stores/auth-store";
 import type { Comment } from "@/types/comment";
 
 function CommentItem({ comment, onReply }: { comment: Comment; postId: string | number; onReply: (parentId: number) => void }) {
+  // 生成用户头像显示文本（取ID后3位或首字母）
+  const getAvatarText = (authorId: number) => {
+    const idStr = String(authorId);
+    return idStr.length > 3 ? idStr.slice(-3) : idStr;
+  };
+
   return (
-    <div className="py-4">
+    <div className="py-5">
       <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
-          U{comment.authorId}
+        {/* 头像 */}
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold">
+          {getAvatarText(comment.authorId)}
         </div>
+        
+        {/* 内容区 */}
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium mb-1">用户 {comment.authorId}</div>
-          <p className="text-sm text-foreground leading-relaxed">{comment.content}</p>
-          <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
-            <span>{new Date(comment.createdAt * 1000).toLocaleString()}</span>
-            <button className="hover:text-foreground transition-colors" onClick={() => onReply(comment.id)}>
+          {/* 用户名 */}
+          <div className="mb-1.5 text-sm font-medium text-foreground">
+            用户 {comment.authorId}
+          </div>
+          
+          {/* 评论内容 */}
+          <p className="mb-2 text-sm text-foreground leading-relaxed break-words">
+            {comment.content}
+          </p>
+          
+          {/* 操作栏 */}
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span>{new Date(comment.createdAt * 1000).toLocaleString('zh-CN', { 
+              year: 'numeric', 
+              month: '2-digit', 
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}</span>
+            <button 
+              className="transition-colors hover:text-foreground" 
+              onClick={() => onReply(comment.id)}
+            >
               回复
             </button>
-            <span className="flex items-center gap-1">
+            <button className="flex items-center gap-1 transition-colors hover:text-foreground">
               <span>👍</span>
               <span>{comment.likeCount}</span>
-            </span>
+            </button>
           </div>
 
+          {/* 楼中楼回复 */}
           {comment.replies && comment.replies.length > 0 && (
-            <div className="mt-4 space-y-3 border-l-2 border-border pl-4">
+            <div className="mt-4 space-y-4 rounded-lg bg-muted/30 p-4">
               {comment.replies.map((reply) => (
-                <div key={reply.id}>
-                  <div className="text-sm font-medium mb-1">用户 {reply.authorId}</div>
-                  <p className="text-sm text-foreground leading-relaxed">{reply.content}</p>
-                  <div className="mt-1 flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>{new Date(reply.createdAt * 1000).toLocaleString()}</span>
-                    <span className="flex items-center gap-1">
-                      <span>👍</span>
-                      <span>{reply.likeCount}</span>
-                    </span>
+                <div key={reply.id} className="flex items-start gap-3">
+                  {/* 回复者头像 */}
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold">
+                    {getAvatarText(reply.authorId)}
+                  </div>
+                  
+                  {/* 回复内容 */}
+                  <div className="flex-1 min-w-0">
+                    <div className="mb-1 text-sm font-medium text-foreground">
+                      用户 {reply.authorId}
+                    </div>
+                    <p className="mb-1.5 text-sm text-foreground leading-relaxed break-words">
+                      {reply.content}
+                    </p>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <span>{new Date(reply.createdAt * 1000).toLocaleString('zh-CN', { 
+                        year: 'numeric', 
+                        month: '2-digit', 
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}</span>
+                      <button className="flex items-center gap-1 transition-colors hover:text-foreground">
+                        <span>👍</span>
+                        <span>{reply.likeCount}</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -74,18 +120,18 @@ export function CommentSection({ postId }: { postId: string | number }) {
 
   return (
     <div className="border-t pt-8">
-      <h3 className="text-xl font-semibold mb-6">评论 ({data?.pagination.total ?? 0})</h3>
+      <h3 className="mb-6 text-xl font-semibold">评论 ({data?.pagination.total ?? 0})</h3>
 
       {token ? (
         <div className="mb-8 space-y-3">
           {replyTo && (
-            <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
               <span className="text-muted-foreground">回复评论 #{replyTo}</span>
               <button 
-                className="text-foreground/80 hover:text-foreground transition-colors" 
+                className="text-foreground/80 transition-colors hover:text-foreground" 
                 onClick={() => setReplyTo(null)}
               >
-                取消回复
+                取消
               </button>
             </div>
           )}
@@ -112,11 +158,11 @@ export function CommentSection({ postId }: { postId: string | number }) {
       <div className="divide-y">
         {isLoading && (
           <>
-            <div className="py-4">
-              <Skeleton className="h-20 w-full" />
+            <div className="py-5">
+              <Skeleton className="h-24 w-full" />
             </div>
-            <div className="py-4">
-              <Skeleton className="h-20 w-full" />
+            <div className="py-5">
+              <Skeleton className="h-24 w-full" />
             </div>
           </>
         )}

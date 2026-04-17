@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuthStore } from "@/stores/auth-store";
 import { useLogout } from "@/hooks/queries/use-auth";
+import { PenSquare } from "lucide-react";
 
 export function Header() {
   const { user, refreshToken, logout } = useAuthStore();
@@ -20,7 +21,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6 lg:px-8">
         <div className="flex items-center gap-8">
           <Link href="/" className="text-xl font-bold tracking-tight hover:text-foreground/80 transition-colors">
             BlogCommunity
@@ -42,6 +43,14 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-3">
+          {user && (
+            <Link href="/posts/new">
+              <Button size="sm" variant="ghost" className="gap-1.5">
+                <PenSquare className="h-4 w-4" />
+                <span>写文章</span>
+              </Button>
+            </Link>
+          )}
           <ThemeToggle />
           {user ? (
             <>
@@ -52,12 +61,12 @@ export function Header() {
                 {user.username}
               </Link>
               <Button 
-                variant="ghost" 
                 size="sm" 
                 onClick={handleLogout} 
                 disabled={logoutMutation.isPending}
+                className="bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
               >
-                登出
+                退出
               </Button>
             </>
           ) : (

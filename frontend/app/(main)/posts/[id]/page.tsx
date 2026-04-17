@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Container } from "@/components/ui/container";
 import { EmptyState } from "@/components/ui/empty-state";
-import { AuthorCard } from "@/components/features/author-card";
 import { ArrowLeft } from "lucide-react";
 import { CommentSection } from "@/components/shared/comment-section";
 import { LikeButton } from "@/components/shared/like-button";
@@ -45,12 +44,18 @@ export default function PostDetailPage() {
     }
   };
 
+  // 生成用户头像显示文本
+  const getAvatarText = (authorId: number) => {
+    const idStr = String(authorId);
+    return idStr.length > 3 ? idStr.slice(-3) : idStr;
+  };
+
   if (isLoading) {
     return (
-      <Container size="md" className="py-12">
-        <Skeleton className="mb-6 h-8 w-3/4" />
-        <Skeleton className="mb-4 h-4 w-full" />
-        <Skeleton className="mb-4 h-4 w-full" />
+      <Container size="lg" className="py-6">
+        <Skeleton className="mb-4 h-8 w-3/4" />
+        <Skeleton className="mb-3 h-4 w-full" />
+        <Skeleton className="mb-3 h-4 w-full" />
         <Skeleton className="h-4 w-2/3" />
       </Container>
     );
@@ -58,7 +63,7 @@ export default function PostDetailPage() {
 
   if (!post) {
     return (
-      <Container size="md" className="py-16">
+      <Container size="lg" className="py-12">
         <EmptyState 
           title="文章不存在或已被删除"
           action={
@@ -72,72 +77,134 @@ export default function PostDetailPage() {
   }
 
   return (
-    <Container size="md" className="py-12">
-      <Link href="/" className="mb-8 inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft className="mr-1.5 h-4 w-4" />
-        返回首页
-      </Link>
+    <Container size="lg" className="py-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-8">
+        {/* 主内容区 */}
+        <article className="min-w-0">
+          {/* 返回按钮 */}
+          <Link href="/" className="mb-4 inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="mr-1.5 h-4 w-4" />
+            返回首页
+          </Link>
 
-      <article className="space-y-8">
-        {/* 标题区 */}
-        <div className="space-y-6">
-          <h1 className="text-4xl font-bold tracking-tight leading-tight">{post.title}</h1>
+          {/* 标题 */}
+          <h1 className="mb-4 text-3xl font-bold tracking-tight leading-tight">{post.title}</h1>
           
-          <AuthorCard
-            authorId={post.authorId}
-            username={author?.username}
-            followersCount={authorStats?.followersCount}
-            isMe={isMe}
-            isFollowing={isFollowing}
-            onFollowToggle={me && !isMe ? handleFollowToggle : undefined}
-            isLoading={followMutation.isPending || unfollowMutation.isPending}
-          />
+          {/* 作者信息 */}
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold">
+                {getAvatarText(post.authorId)}
+              </div>
+              <div>
+                <Link href={`/user/${post.authorId}`} className="text-sm font-medium hover:text-foreground/80 transition-colors">
+                  {author?.username ?? `用户 ${post.authorId}`}
+                </Link>
+                <div className="text-xs text-muted-foreground">
+                  {authorStats?.followersCount ?? 0} 粉丝
+                </div>
+              </div>
+            </div>
+            {me && !isMe && (
+              <Button
+                variant={isFollowing ? "outline" : "default"}
+                size="sm"
+                onClick={handleFollowToggle}
+                disabled={followMutation.isPending || unfollowMutation.isPending}
+              >
+                {isFollowing ? "已关注" : "关注"}
+              </Button>
+            )}
+          </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          {/* 标签和统计 */}
+          <div className="mb-6 flex flex-wrap items-center gap-2 text-xs text-muted-foreground pb-6 border-b">
             {post.tags.map((tag) => (
-              <span key={tag} className="rounded-md bg-muted px-2.5 py-1 text-xs text-muted-foreground font-medium">
+              <span key={tag} className="rounded-md bg-muted px-2 py-1 font-medium">
                 {tag}
               </span>
             ))}
-            <div className="ml-auto flex items-center gap-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5">
+            <div className="ml-auto flex items-center gap-3">
+              <span className="flex items-center gap-1">
                 <span>👁</span>
                 <span>{post.viewCount}</span>
               </span>
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1">
                 <span>💬</span>
                 <span>{post.commentCount}</span>
               </span>
             </div>
           </div>
-        </div>
 
-        {/* 内容区 */}
-        <div className="border-t pt-8">
-          {post.contentType === "markdown" ? (
-            <div className="prose prose-zinc dark:prose-invert max-w-none">
-              <pre className="whitespace-pre-wrap font-sans text-foreground bg-transparent p-0 text-[15px] leading-relaxed">
-                {post.content}
-              </pre>
+          {/* 文章内容 */}
+          <div className="mb-6">
+            {post.contentType === "markdown" ? (
+              <div className="prose prose-zinc dark:prose-invert max-w-none">
+                <pre className="whitespace-pre-wrap font-sans text-foreground bg-transparent p-0 text-[15px] leading-relaxed">
+                  {post.content}
+                </pre>
+              </div>
+            ) : (
+              <div
+                className="prose prose-zinc dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: post.content || "" }}
+              />
+            )}
+          </div>
+
+          {/* 互动区 */}
+          <div className="flex items-center gap-3 py-4 border-y">
+            <LikeButton targetType="post" targetId={post.id} initialCount={post.likeCount} />
+            <CollectButton targetType="post" targetId={post.id} initialCount={post.collectCount} />
+          </div>
+
+          {/* 评论区 */}
+          <div className="mt-6">
+            <CommentSection postId={id} />
+          </div>
+        </article>
+
+        {/* 右侧栏 */}
+        <aside className="hidden lg:block">
+          <div className="sticky top-[5rem] space-y-4">
+            {/* 作者信息卡片 */}
+            <div className="rounded-lg border bg-card p-4">
+              <div className="mb-3 text-sm font-semibold">关于作者</div>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
+                  {getAvatarText(post.authorId)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">
+                    {author?.username ?? `用户 ${post.authorId}`}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {authorStats?.followersCount ?? 0} 粉丝
+                  </div>
+                </div>
+              </div>
+              {me && !isMe && (
+                <Button
+                  variant={isFollowing ? "outline" : "default"}
+                  size="sm"
+                  className="w-full"
+                  onClick={handleFollowToggle}
+                  disabled={followMutation.isPending || unfollowMutation.isPending}
+                >
+                  {isFollowing ? "已关注" : "关注"}
+                </Button>
+              )}
             </div>
-          ) : (
-            <div
-              className="prose prose-zinc dark:prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: post.content || "" }}
-            />
-          )}
-        </div>
 
-        {/* 互动区 */}
-        <div className="flex items-center gap-3 border-t pt-6">
-          <LikeButton targetType="post" targetId={post.id} initialCount={post.likeCount} />
-          <CollectButton targetType="post" targetId={post.id} initialCount={post.collectCount} />
-        </div>
-      </article>
-
-      {/* 评论区 */}
-      <div className="mt-12">
-        <CommentSection postId={id} />
+            {/* 目录 */}
+            <div className="rounded-lg border bg-card p-4">
+              <div className="text-sm font-semibold">目录</div>
+              <div className="mt-3 text-xs text-muted-foreground">
+                暂无目录
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
     </Container>
   );
