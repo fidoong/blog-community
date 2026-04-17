@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { usePost } from "@/hooks/queries/use-posts";
 import { useUserProfile } from "@/hooks/queries/use-user";
 import {
@@ -80,7 +81,12 @@ export default function PostDetailPage() {
     <Container size="lg" className="py-6">
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-8">
         {/* 主内容区 */}
-        <article className="min-w-0">
+        <motion.article 
+          className="min-w-0"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+        >
           {/* 返回按钮 */}
           <Link href="/" className="mb-4 inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="mr-1.5 h-4 w-4" />
@@ -97,8 +103,8 @@ export default function PostDetailPage() {
                 {getAvatarText(post.authorId)}
               </div>
               <div>
-                <Link href={`/user/${post.authorId}`} className="text-sm font-medium hover:text-foreground/80 transition-colors">
-                  {author?.username ?? `用户 ${post.authorId}`}
+                <Link href={`/user/${post.authorId}`} className="text-sm font-medium hover:text-foreground/80 transition-colors truncate max-w-[200px]">
+                  {post.authorName || author?.username || `用户 ${post.authorId}`}
                 </Link>
                 <div className="text-xs text-muted-foreground">
                   {authorStats?.followersCount ?? 0} 粉丝
@@ -162,11 +168,16 @@ export default function PostDetailPage() {
           <div className="mt-6">
             <CommentSection postId={id} />
           </div>
-        </article>
+        </motion.article>
 
         {/* 右侧栏 */}
         <aside className="hidden lg:block">
-          <div className="sticky top-[5rem] space-y-4">
+          <motion.div 
+            className="sticky top-[5rem] space-y-4"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
+          >
             {/* 作者信息卡片 */}
             <div className="rounded-lg border bg-card p-4">
               <div className="mb-3 text-sm font-semibold">关于作者</div>
@@ -176,7 +187,7 @@ export default function PostDetailPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium truncate">
-                    {author?.username ?? `用户 ${post.authorId}`}
+                    {post.authorName || author?.username || `用户 ${post.authorId}`}
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {authorStats?.followersCount ?? 0} 粉丝
@@ -203,7 +214,7 @@ export default function PostDetailPage() {
                 暂无目录
               </div>
             </div>
-          </div>
+          </motion.div>
         </aside>
       </div>
     </Container>

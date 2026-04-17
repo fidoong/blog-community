@@ -1,4 +1,7 @@
+"use client"
+
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Post } from "@/types/post";
 import { cn } from "@/lib/utils";
@@ -6,17 +9,32 @@ import { cn } from "@/lib/utils";
 interface PostCardProps {
   post: Post;
   className?: string;
+  index?: number;
+  disableAnimation?: boolean;
 }
 
-export function PostCard({ post, className }: PostCardProps) {
+export function PostCard({ post, className, index = 0, disableAnimation = false }: PostCardProps) {
   // 生成用户头像显示文本（取ID后3位）
   const getAvatarText = (authorId: number) => {
     const idStr = String(authorId);
     return idStr.length > 3 ? idStr.slice(-3) : idStr;
   };
 
+  // 只对前10项添加动画，且延迟不超过0.3秒
+  const shouldAnimate = !disableAnimation && index < 10;
+  const animationDelay = shouldAnimate ? Math.min(index * 0.03, 0.3) : 0;
+
   return (
-    <article className={cn("group", className)}>
+    <motion.article 
+      className={cn("group", className)}
+      initial={shouldAnimate ? { opacity: 0, y: 8 } : false}
+      animate={shouldAnimate ? { opacity: 1, y: 0 } : false}
+      transition={{ 
+        duration: 0.2, 
+        delay: animationDelay,
+        ease: "easeOut" 
+      }}
+    >
       <div className="flex items-start gap-4">
         {/* 作者头像 */}
         <Link href={`/user/${post.authorId}`} className="shrink-0">
@@ -43,9 +61,10 @@ export function PostCard({ post, className }: PostCardProps) {
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Link 
               href={`/user/${post.authorId}`} 
-              className="transition-colors hover:text-foreground"
+              className="transition-colors hover:text-foreground truncate max-w-[120px]"
+              title={post.authorName || `用户 ${post.authorId}`}
             >
-              用户 {post.authorId}
+              {post.authorName || `用户 ${post.authorId}`}
             </Link>
             
             {post.tags && post.tags.length > 0 && (
@@ -78,7 +97,7 @@ export function PostCard({ post, className }: PostCardProps) {
           </div>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }
 

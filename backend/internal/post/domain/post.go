@@ -17,6 +17,7 @@ type Post struct {
 	ContentType  string
 	CoverImage   string
 	AuthorID     uint64
+	AuthorName   string
 	Status       string
 	ViewCount    int
 	LikeCount    int

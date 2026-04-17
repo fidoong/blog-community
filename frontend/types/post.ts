@@ -6,6 +6,7 @@ export interface Post {
   contentType: "markdown" | "rich_text";
   coverImage: string;
   authorId: number;
+  authorName?: string;
   status: "draft" | "pending" | "published" | "rejected";
   viewCount: number;
   likeCount: number;

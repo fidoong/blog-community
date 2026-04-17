@@ -45,6 +45,7 @@ type postResponse struct {
 	ContentType  string   `json:"contentType"`
 	CoverImage   string   `json:"coverImage"`
 	AuthorID     uint64   `json:"authorId"`
+	AuthorName   string   `json:"authorName"`
 	Status       string   `json:"status"`
 	ViewCount    int      `json:"viewCount"`
 	LikeCount    int      `json:"likeCount"`
@@ -235,6 +236,7 @@ func toPostResponse(p *domain.Post, withContent bool) postResponse {
 		ContentType:  p.ContentType,
 		CoverImage:   p.CoverImage,
 		AuthorID:     p.AuthorID,
+		AuthorName:   p.AuthorName,
 		Status:       p.Status,
 		ViewCount:    p.ViewCount,
 		LikeCount:    p.LikeCount,

@@ -5,6 +5,7 @@ import (
 
 	"github.com/blog/blog-community/internal/ent"
 	"github.com/blog/blog-community/internal/ent/post"
+	"github.com/blog/blog-community/internal/ent/user"
 	postDomain "github.com/blog/blog-community/internal/post/domain"
 )
 
@@ -46,7 +47,12 @@ func (r *entPostRepo) GetByID(ctx context.Context, id uint64) (*postDomain.Post,
 	if err != nil {
 		return nil, err
 	}
-	return toDomain(ep), nil
+	p := toDomain(ep)
+	// fill author name
+	if u, err := r.client.User.Get(ctx, ep.AuthorID); err == nil {
+		p.AuthorName = u.Username
+	}
+	return p, nil
 }
 
 func (r *entPostRepo) Update(ctx context.Context, p *postDomain.Post) error {
@@ -108,6 +114,27 @@ func (r *entPostRepo) List(ctx context.Context, filter postDomain.ListFilter) ([
 	for i, ep := range eps {
 		posts[i] = toDomain(ep)
 	}
+
+	// batch fill author names
+	if len(posts) > 0 {
+		authorIDs := make([]uint64, 0, len(posts))
+		for _, p := range posts {
+			authorIDs = append(authorIDs, p.AuthorID)
+		}
+		users, err := r.client.User.Query().Where(user.IDIn(authorIDs...)).All(ctx)
+		if err == nil {
+			userMap := make(map[uint64]string, len(users))
+			for _, u := range users {
+				userMap[u.ID] = u.Username
+			}
+			for _, p := range posts {
+				if name, ok := userMap[p.AuthorID]; ok {
+					p.AuthorName = name
+				}
+			}
+		}
+	}
+
 	return posts, int64(total), nil
 }
 
