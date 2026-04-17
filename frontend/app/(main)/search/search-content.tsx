@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Search, X } from "lucide-react";
+import { Search, X, TrendingUp } from "lucide-react";
 import { usePosts } from "@/hooks/queries/use-posts";
+import { useHotKeywords } from "@/hooks/queries/use-hot-keywords";
 import { Container } from "@/components/ui/container";
 import { PostCard, PostCardSkeleton } from "@/components/features/post-card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -22,8 +23,10 @@ export function SearchContent() {
     keyword: searchTerm,
     pageSize: 20,
   });
+  const { data: hotData } = useHotKeywords(10);
 
   const posts = data?.list ?? [];
+  const hotKeywords = hotData?.list ?? [];
 
   // 当 URL 参数变化时同步
   useEffect(() => {
@@ -117,10 +120,44 @@ export function SearchContent() {
       )}
 
       {!searchTerm && (
-        <div className="py-16 text-center">
-          <Search className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
-          <p className="text-muted-foreground">输入关键词开始搜索文章</p>
-        </div>
+        <>
+          {hotKeywords.length > 0 && (
+            <motion.div
+              className="mb-8"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground">热搜词</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {hotKeywords.map((keyword, index) => (
+                  <button
+                    key={keyword}
+                    onClick={() => {
+                      setQuery(keyword);
+                      router.push(`/search?q=${encodeURIComponent(keyword)}`);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-sm hover:bg-muted/80 transition-colors"
+                  >
+                    <span className={`text-xs font-semibold ${
+                      index < 3 ? "text-foreground" : "text-muted-foreground"
+                    }`}>
+                      {index + 1}
+                    </span>
+                    <span>{keyword}</span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+          <div className="py-16 text-center">
+            <Search className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+            <p className="text-muted-foreground">输入关键词开始搜索文章</p>
+          </div>
+        </>
       )}
     </Container>
   );

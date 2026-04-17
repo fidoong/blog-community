@@ -13,14 +13,16 @@ import (
 	followinfra "github.com/blog/blog-community/internal/follow/infrastructure"
 	"github.com/blog/blog-community/internal/post/application"
 	postinfra "github.com/blog/blog-community/internal/post/infrastructure"
+	"github.com/redis/go-redis/v9"
 )
 
 // Injectors from wire.go:
 
 // InitializeHandler injects feed dependencies.
-func InitializeHandler(client *ent.Client) *delivery.FeedHandler {
+func InitializeHandler(client *ent.Client, redisClient *redis.Client) *delivery.FeedHandler {
 	postRepository := postinfra.NewEntPostRepo(client)
-	useCase := application.NewPostUseCase(postRepository)
+	searchTrendRepo := postinfra.NewSearchTrendRepo(redisClient)
+	useCase := application.NewPostUseCase(postRepository, searchTrendRepo)
 	entFollowRepo := followinfra.NewEntFollowRepo(client)
 	domainUseCase := application2.NewFeedUseCase(useCase, entFollowRepo)
 	feedHandler := delivery.NewFeedHandler(domainUseCase)

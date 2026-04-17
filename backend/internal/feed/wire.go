@@ -12,12 +12,14 @@ import (
 	followinfra "github.com/blog/blog-community/internal/follow/infrastructure"
 	postapp "github.com/blog/blog-community/internal/post/application"
 	postinfra "github.com/blog/blog-community/internal/post/infrastructure"
+	"github.com/redis/go-redis/v9"
 )
 
 // InitializeHandler injects feed dependencies.
-func InitializeHandler(client *ent.Client) *delivery.FeedHandler {
+func InitializeHandler(client *ent.Client, redisClient *redis.Client) *delivery.FeedHandler {
 	wire.Build(
 		postinfra.NewEntPostRepo,
+		postinfra.NewSearchTrendRepo,
 		postapp.NewPostUseCase,
 		wire.Bind(new(domain.PostLister), new(postapp.UseCase)),
 		followinfra.NewEntFollowRepo,

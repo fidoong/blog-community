@@ -265,6 +265,16 @@ func (h *PostHandler) GetRelated(c *gin.Context) {
 	response.Success(c.Writer, gin.H{"list": list})
 }
 
+func (h *PostHandler) HotKeywords(c *gin.Context) {
+	limit, _ := strconv.ParseInt(c.DefaultQuery("limit", "10"), 10, 64)
+	keywords, err := h.useCase.HotKeywords(c.Request.Context(), limit)
+	if err != nil {
+		c.Error(errors.Wrap(err, errors.ErrInternal))
+		return
+	}
+	response.Success(c.Writer, gin.H{"list": keywords})
+}
+
 func toPostResponse(p *domain.Post, withContent bool) postResponse {
 	resp := postResponse{
 		ID:           p.ID,

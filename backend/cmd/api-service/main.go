@@ -72,12 +72,12 @@ func main() {
 
 	// Wire up handlers — each module owns its own route registration
 	userServer := user.InitializeServer(cfg, client, tokenStore)
-	postHandler := post.InitializeHandler(client)
+	postHandler := post.InitializeHandler(client, redisClient)
 	commentHandler := comment.InitializeHandler(client)
 	interactionHandler := interaction.InitializeHandler(client, redisClient)
 
 	postServer := postDelivery.NewPostServer(postHandler)
-	feedServer := feedDelivery.NewFeedServer(feed.InitializeHandler(client))
+	feedServer := feedDelivery.NewFeedServer(feed.InitializeHandler(client, redisClient))
 	followServer := followDelivery.NewFollowServer(follow.InitializeHandler(client))
 	commentServer := commentDelivery.NewCommentServer(commentHandler)
 	interactionServer := interactionDelivery.NewInteractionServer(interactionHandler)

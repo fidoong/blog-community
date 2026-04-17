@@ -9,6 +9,12 @@ import (
 	"github.com/blog/blog-community/internal/post/domain"
 )
 
+// SearchTrendRecorder abstracts search keyword recording.
+type SearchTrendRecorder interface {
+	RecordKeyword(ctx context.Context, keyword string) error
+	HotKeywords(ctx context.Context, n int64) ([]string, error)
+}
+
 // UseCase defines post application operations.
 type UseCase interface {
 	Create(ctx context.Context, authorID uint64, title, content, contentType, coverImage string, tags []string) (*domain.Post, error)
@@ -18,15 +24,17 @@ type UseCase interface {
 	List(ctx context.Context, filter domain.ListFilter) ([]*domain.Post, int64, error)
 	Publish(ctx context.Context, id, authorID uint64) (*domain.Post, error)
 	GetRelated(ctx context.Context, id uint64, limit int) ([]*domain.Post, error)
+	HotKeywords(ctx context.Context, limit int64) ([]string, error)
 }
 
 type postUseCase struct {
-	repo domain.PostRepository
+	repo       domain.PostRepository
+	trendRepo  SearchTrendRecorder
 }
 
 // NewPostUseCase creates a new post usecase.
-func NewPostUseCase(repo domain.PostRepository) UseCase {
-	return &postUseCase{repo: repo}
+func NewPostUseCase(repo domain.PostRepository, trendRepo SearchTrendRecorder) UseCase {
+	return &postUseCase{repo: repo, trendRepo: trendRepo}
 }
 
 func (uc *postUseCase) Create(ctx context.Context, authorID uint64, title, content, contentType, coverImage string, tags []string) (*domain.Post, error) {
@@ -113,6 +121,10 @@ func (uc *postUseCase) List(ctx context.Context, filter domain.ListFilter) ([]*d
 	if filter.PageSize < 1 || filter.PageSize > 100 {
 		filter.PageSize = 20
 	}
+	// Record search keyword asynchronously
+	if filter.Keyword != "" {
+		go uc.trendRepo.RecordKeyword(context.Background(), filter.Keyword)
+	}
 	return uc.repo.List(ctx, filter)
 }
 
@@ -143,4 +155,11 @@ func (uc *postUseCase) GetRelated(ctx context.Context, id uint64, limit int) ([]
 		limit = 5
 	}
 	return uc.repo.GetRelated(ctx, id, limit)
+}
+
+func (uc *postUseCase) HotKeywords(ctx context.Context, limit int64) ([]string, error) {
+	if limit < 1 || limit > 50 {
+		limit = 10
+	}
+	return uc.trendRepo.HotKeywords(ctx, limit)
 }

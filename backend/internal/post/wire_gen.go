@@ -11,14 +11,16 @@ import (
 	"github.com/blog/blog-community/internal/post/application"
 	"github.com/blog/blog-community/internal/post/delivery"
 	"github.com/blog/blog-community/internal/post/infrastructure"
+	"github.com/redis/go-redis/v9"
 )
 
 // Injectors from wire.go:
 
 // InitializeHandler wires all dependencies for the post HTTP handler.
-func InitializeHandler(client *ent.Client) *delivery.PostHandler {
+func InitializeHandler(client *ent.Client, redisClient *redis.Client) *delivery.PostHandler {
 	postRepository := infrastructure.NewEntPostRepo(client)
-	useCase := application.NewPostUseCase(postRepository)
+	searchTrendRepo := infrastructure.NewSearchTrendRepo(redisClient)
+	useCase := application.NewPostUseCase(postRepository, searchTrendRepo)
 	postHandler := delivery.NewPostHandler(useCase)
 	return postHandler
 }
