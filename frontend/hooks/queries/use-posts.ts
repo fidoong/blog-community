@@ -8,6 +8,7 @@ interface ListPostsParams {
   pageSize?: number;
   sort?: "new" | "hot";
   status?: string;
+  authorId?: string | number;
 }
 
 export function usePosts(params: ListPostsParams = {}) {
@@ -21,6 +22,7 @@ export function usePosts(params: ListPostsParams = {}) {
             pageSize: params.pageSize ?? 20,
             sort: params.sort ?? "new",
             ...(params.status ? { status: params.status } : {}),
+            ...(params.authorId ? { authorId: params.authorId } : {}),
           },
         })
         .json<PostsResponse>(),

@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Container } from "@/components/ui/container";
 import { EmptyState } from "@/components/ui/empty-state";
+import { usePosts } from "@/hooks/queries/use-posts";
+import { PostCard, PostCardSkeleton } from "@/components/features/post-card";
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -95,13 +97,50 @@ export default function UserProfilePage() {
       </div>
 
       {/* 文章列表 */}
+      <UserPosts userId={userId} />
+    </Container>
+  );
+}
+
+function UserPosts({ userId }: { userId: string }) {
+  const { data, isLoading } = usePosts({ authorId: userId, pageSize: 20 });
+
+  if (isLoading) {
+    return (
       <div>
         <h2 className="text-lg font-semibold mb-6">发布的文章</h2>
-        <EmptyState 
-          title="文章列表开发中" 
-          description="敬请期待 👷"
-        />
+        <div className="divide-y">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="py-4 first:pt-0">
+              <PostCardSkeleton />
+            </div>
+          ))}
+        </div>
       </div>
-    </Container>
+    );
+  }
+
+  const posts = data?.list ?? [];
+
+  if (posts.length === 0) {
+    return (
+      <div>
+        <h2 className="text-lg font-semibold mb-6">发布的文章</h2>
+        <EmptyState title="暂无文章" description="该用户还没有发布过文章" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h2 className="text-lg font-semibold mb-6">发布的文章 ({data?.pagination.total ?? 0})</h2>
+      <div className="divide-y">
+        {posts.map((post, index) => (
+          <div key={post.id} className="py-4 first:pt-0">
+            <PostCard post={post} index={index} />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

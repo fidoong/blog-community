@@ -165,12 +165,20 @@ func (h *PostHandler) List(c *gin.Context) {
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
 	sort := c.DefaultQuery("sort", "new")
 	status := c.Query("status")
+	authorIDStr := c.Query("authorId")
 
 	filter := domain.ListFilter{
 		Page:     page,
 		PageSize: pageSize,
 		Sort:     sort,
 		Status:   status,
+	}
+
+	if authorIDStr != "" {
+		authorID, err := strconv.ParseUint(authorIDStr, 10, 64)
+		if err == nil {
+			filter.AuthorID = authorID
+		}
 	}
 
 	// Default feed only shows published posts
