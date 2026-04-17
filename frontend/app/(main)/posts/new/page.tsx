@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Container } from "@/components/ui/container";
+import { PageHeader } from "@/components/ui/page-header";
 import { toast } from "sonner";
 
 export default function NewPostPage() {
@@ -41,60 +42,60 @@ export default function NewPostPage() {
   };
 
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>写文章</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">标题</Label>
-            <Input
-              id="title"
-              placeholder="请输入文章标题"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </div>
+    <Container size="md" className="py-12">
+      <PageHeader title="写文章" description="分享你的技术见解" />
+      
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="title" className="text-sm font-medium">标题</Label>
+          <Input
+            id="title"
+            placeholder="请输入文章标题"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="h-11 text-base"
+          />
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="content">内容 (Markdown)</Label>
-            <Textarea
-              id="content"
-              rows={16}
-              placeholder="开始写作..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="content" className="text-sm font-medium">内容 (Markdown)</Label>
+          <Textarea
+            id="content"
+            rows={20}
+            placeholder="开始写作..."
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            className="resize-none text-[15px] leading-relaxed font-mono"
+          />
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="tags">标签</Label>
-            <Input
-              id="tags"
-              placeholder="用英文逗号分隔，如：Go, 后端, 微服务"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="tags" className="text-sm font-medium">标签</Label>
+          <Input
+            id="tags"
+            placeholder="用英文逗号分隔，如：Go, 后端, 微服务"
+            value={tags}
+            onChange={(e) => setTags(e.target.value)}
+            className="h-10"
+          />
+        </div>
 
-          <div className="flex gap-3 pt-2">
-            <Button
-              variant="outline"
-              onClick={handleSaveDraft}
-              disabled={createMutation.isPending || !title || !content}
-            >
-              保存草稿
-            </Button>
-            <Button
-              onClick={handlePublish}
-              disabled={createMutation.isPending || publishMutation.isPending || !title || !content}
-            >
-              发布文章
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        <div className="flex gap-3 pt-4">
+          <Button
+            variant="outline"
+            onClick={handleSaveDraft}
+            disabled={createMutation.isPending || !title || !content}
+          >
+            保存草稿
+          </Button>
+          <Button
+            onClick={handlePublish}
+            disabled={createMutation.isPending || publishMutation.isPending || !title || !content}
+          >
+            发布文章
+          </Button>
+        </div>
+      </div>
+    </Container>
   );
 }
