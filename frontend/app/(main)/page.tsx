@@ -87,33 +87,33 @@ export default function HomePage() {
           <main className="min-w-0 flex flex-col overflow-hidden">
             {/* 顶部分类导航 - 固定不滚动 */}
             <div className="flex-shrink-0 mb-4 pb-3 border-b">
-              <div className="flex gap-6">
-              {[
-                { key: "following", label: "关注" },
-                { key: "latest", label: "最新" },
-                { key: "hot", label: "热榜" },
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key as FeedTab)}
-                  className={`pb-3 text-sm font-medium transition-colors relative ${
-                    activeTab === tab.key
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {tab.label}
-                  {activeTab === tab.key && (
-                    <motion.div 
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground"
-                      layoutId="activeTab"
-                      transition={{ duration: 0.2, ease: "easeOut" }}
-                    />
-                  )}
-                </button>
-              ))}
+              <div className="flex gap-6 overflow-x-auto">
+                {[
+                  { key: "following", label: "关注" },
+                  { key: "latest", label: "最新" },
+                  { key: "hot", label: "热榜" },
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key as FeedTab)}
+                    className={`whitespace-nowrap pb-3 text-sm font-medium transition-colors relative ${
+                      activeTab === tab.key
+                        ? "text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {tab.label}
+                    {activeTab === tab.key && (
+                      <motion.div
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground"
+                        layoutId="activeTab"
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
           {/* 文章列表 - 独立滚动区域 */}
           <div className="flex-1 overflow-y-auto">
