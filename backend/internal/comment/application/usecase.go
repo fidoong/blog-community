@@ -3,9 +3,11 @@ package application
 import (
 	"context"
 	stderrors "errors"
+	"fmt"
 
 	"github.com/blog/blog-community/pkg/errors"
 	"github.com/blog/blog-community/internal/comment/domain"
+	notificationDomain "github.com/blog/blog-community/internal/notification/domain"
 )
 
 // UseCase defines comment application operations.
@@ -17,12 +19,13 @@ type UseCase interface {
 }
 
 type commentUseCase struct {
-	repo domain.CommentRepository
+	repo     domain.CommentRepository
+	notifier notificationDomain.Notifier
 }
 
 // NewCommentUseCase creates a new comment usecase.
-func NewCommentUseCase(repo domain.CommentRepository) UseCase {
-	return &commentUseCase{repo: repo}
+func NewCommentUseCase(repo domain.CommentRepository, notifier notificationDomain.Notifier) UseCase {
+	return &commentUseCase{repo: repo, notifier: notifier}
 }
 
 func (uc *commentUseCase) Create(ctx context.Context, postID, authorID uint64, content string, parentID *uint64) (*domain.Comment, error) {
@@ -35,7 +38,57 @@ func (uc *commentUseCase) Create(ctx context.Context, postID, authorID uint64, c
 	if err := uc.repo.Create(ctx, c); err != nil {
 		return nil, errors.Wrap(err, errors.ErrInternal)
 	}
+
+	// Send notification asynchronously
+	go uc.sendCommentNotification(context.Background(), c)
+
 	return c, nil
+}
+
+func (uc *commentUseCase) sendCommentNotification(ctx context.Context, c *domain.Comment) {
+	if uc.notifier == nil {
+		return
+	}
+
+	var recipientID uint64
+	var notifType notificationDomain.NotificationType
+	var title, targetType string
+	var targetID *uint64
+
+	if c.ParentID != nil {
+		// Reply to a comment
+		authorID, err := uc.repo.GetCommentAuthorID(ctx, *c.ParentID)
+		if err != nil || authorID == c.AuthorID {
+			return
+		}
+		recipientID = authorID
+		notifType = notificationDomain.TypeReply
+		title = "有人回复了你的评论"
+		targetType = "comment"
+		targetID = c.ParentID
+	} else {
+		// Comment on a post
+		authorID, err := uc.repo.GetPostAuthorID(ctx, c.PostID)
+		if err != nil || authorID == c.AuthorID {
+			return
+		}
+		recipientID = authorID
+		notifType = notificationDomain.TypeComment
+		title = "有人评论了你的文章"
+		targetType = "post"
+		pid := c.PostID
+		targetID = &pid
+	}
+
+	_ = uc.notifier.Send(ctx, &notificationDomain.Notification{
+		UserID:     recipientID,
+		Type:       notifType,
+		Title:      title,
+		Content:    fmt.Sprintf("%s", c.Content),
+		ActorID:    &c.AuthorID,
+		TargetID:   targetID,
+		TargetType: &targetType,
+	})
 }
 
 func (uc *commentUseCase) GetByID(ctx context.Context, id uint64) (*domain.Comment, error) {

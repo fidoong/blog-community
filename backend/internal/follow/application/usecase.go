@@ -6,6 +6,7 @@ import (
 
 	"github.com/blog/blog-community/pkg/errors"
 	"github.com/blog/blog-community/internal/follow/domain"
+	notificationDomain "github.com/blog/blog-community/internal/notification/domain"
 )
 
 // UseCase defines follow application operations.
@@ -19,12 +20,13 @@ type UseCase interface {
 }
 
 type followUseCase struct {
-	repo domain.Repository
+	repo     domain.Repository
+	notifier notificationDomain.Notifier
 }
 
 // NewFollowUseCase creates a new follow usecase.
-func NewFollowUseCase(repo domain.Repository) UseCase {
-	return &followUseCase{repo: repo}
+func NewFollowUseCase(repo domain.Repository, notifier notificationDomain.Notifier) UseCase {
+	return &followUseCase{repo: repo, notifier: notifier}
 }
 
 func (uc *followUseCase) Follow(ctx context.Context, followerID, followingID uint64) error {
@@ -37,6 +39,24 @@ func (uc *followUseCase) Follow(ctx context.Context, followerID, followingID uin
 		}
 		return errors.Wrap(err, errors.ErrInternal)
 	}
+
+	// Send notification asynchronously
+	go func() {
+		if uc.notifier == nil {
+			return
+		}
+		targetType := "user"
+		_ = uc.notifier.Send(context.Background(), &notificationDomain.Notification{
+			UserID:     followingID,
+			Type:       notificationDomain.TypeFollow,
+			Title:      "有新粉丝关注了你",
+			Content:    "有新粉丝关注了你",
+			ActorID:    &followerID,
+			TargetID:   &followerID,
+			TargetType: &targetType,
+		})
+	}()
+
 	return nil
 }
 

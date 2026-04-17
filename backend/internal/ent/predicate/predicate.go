@@ -18,6 +18,9 @@ type Follow func(*sql.Selector)
 // LikeRecord is the predicate function for likerecord builders.
 type LikeRecord func(*sql.Selector)
 
+// Notification is the predicate function for notification builders.
+type Notification func(*sql.Selector)
+
 // Post is the predicate function for post builders.
 type Post func(*sql.Selector)
 

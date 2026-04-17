@@ -20,6 +20,8 @@ type Tx struct {
 	Follow *FollowClient
 	// LikeRecord is the client for interacting with the LikeRecord builders.
 	LikeRecord *LikeRecordClient
+	// Notification is the client for interacting with the Notification builders.
+	Notification *NotificationClient
 	// Post is the client for interacting with the Post builders.
 	Post *PostClient
 	// User is the client for interacting with the User builders.
@@ -159,6 +161,7 @@ func (tx *Tx) init() {
 	tx.Comment = NewCommentClient(tx.config)
 	tx.Follow = NewFollowClient(tx.config)
 	tx.LikeRecord = NewLikeRecordClient(tx.config)
+	tx.Notification = NewNotificationClient(tx.config)
 	tx.Post = NewPostClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }

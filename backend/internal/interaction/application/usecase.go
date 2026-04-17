@@ -5,6 +5,7 @@ import (
 
 	"github.com/blog/blog-community/pkg/errors"
 	"github.com/blog/blog-community/internal/interaction/domain"
+	notificationDomain "github.com/blog/blog-community/internal/notification/domain"
 )
 
 // UseCase defines interaction application operations.
@@ -17,13 +18,14 @@ type UseCase interface {
 }
 
 type interactionUseCase struct {
-	repo    domain.Repository
-	counter domain.Counter
+	repo     domain.Repository
+	counter  domain.Counter
+	notifier notificationDomain.Notifier
 }
 
 // NewInteractionUseCase creates a new interaction usecase.
-func NewInteractionUseCase(repo domain.Repository, counter domain.Counter) UseCase {
-	return &interactionUseCase{repo: repo, counter: counter}
+func NewInteractionUseCase(repo domain.Repository, counter domain.Counter, notifier notificationDomain.Notifier) UseCase {
+	return &interactionUseCase{repo: repo, counter: counter, notifier: notifier}
 }
 
 func (uc *interactionUseCase) ToggleLike(ctx context.Context, targetType string, targetID, userID uint64) (bool, int64, error) {
@@ -55,7 +57,55 @@ func (uc *interactionUseCase) ToggleLike(ctx context.Context, targetType string,
 	if err != nil {
 		return false, 0, errors.Wrap(err, errors.ErrInternal)
 	}
+
+	// Send notification asynchronously
+	go uc.sendLikeNotification(context.Background(), targetType, targetID, userID)
+
 	return true, count, nil
+}
+
+func (uc *interactionUseCase) sendLikeNotification(ctx context.Context, targetType string, targetID, userID uint64) {
+	if uc.notifier == nil {
+		return
+	}
+
+	var recipientID uint64
+	var notifType notificationDomain.NotificationType
+	var title string
+	var tt string
+
+	switch targetType {
+	case "post":
+		authorID, err := uc.repo.GetPostAuthorID(ctx, targetID)
+		if err != nil || authorID == userID {
+			return
+		}
+		recipientID = authorID
+		notifType = notificationDomain.TypeLikePost
+		title = "有人赞了你的文章"
+		tt = "post"
+	case "comment":
+		authorID, err := uc.repo.GetCommentAuthorID(ctx, targetID)
+		if err != nil || authorID == userID {
+			return
+		}
+		recipientID = authorID
+		notifType = notificationDomain.TypeLikeComment
+		title = "有人赞了你的评论"
+		tt = "comment"
+	default:
+		return
+	}
+
+	_ = uc.notifier.Send(ctx, &notificationDomain.Notification{
+		UserID:     recipientID,
+		Type:       notifType,
+		Title:      title,
+		Content:    title,
+		ActorID:    &userID,
+		TargetID:   &targetID,
+		TargetType: &tt,
+	})
 }
 
 func (uc *interactionUseCase) GetLikeStatus(ctx context.Context, targetType string, targetID, userID uint64) (bool, int64, error) {

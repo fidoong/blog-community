@@ -11,16 +11,17 @@ import (
 	"github.com/blog/blog-community/internal/interaction/application"
 	"github.com/blog/blog-community/internal/interaction/delivery"
 	"github.com/blog/blog-community/internal/interaction/infrastructure"
+	"github.com/blog/blog-community/internal/notification/domain"
 	"github.com/redis/go-redis/v9"
 )
 
 // Injectors from wire.go:
 
 // InitializeHandler wires all dependencies for the interaction HTTP handler.
-func InitializeHandler(client *ent.Client, redisClient *redis.Client) *delivery.InteractionHandler {
+func InitializeHandler(client *ent.Client, redisClient *redis.Client, notifier domain.Notifier) *delivery.InteractionHandler {
 	repository := infrastructure.NewEntInteractionRepo(client)
 	counter := infrastructure.NewRedisCounter(redisClient)
-	useCase := application.NewInteractionUseCase(repository, counter)
+	useCase := application.NewInteractionUseCase(repository, counter, notifier)
 	interactionHandler := delivery.NewInteractionHandler(useCase)
 	return interactionHandler
 }

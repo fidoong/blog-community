@@ -114,6 +114,38 @@ var (
 			},
 		},
 	}
+	// NotificationsColumns holds the columns for the "notifications" table.
+	NotificationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUint64, Increment: true},
+		{Name: "user_id", Type: field.TypeUint64},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"comment", "reply", "like_post", "like_comment", "follow", "system"}},
+		{Name: "title", Type: field.TypeString, Size: 256},
+		{Name: "content", Type: field.TypeString, Size: 2147483647},
+		{Name: "actor_id", Type: field.TypeUint64, Nullable: true},
+		{Name: "target_id", Type: field.TypeUint64, Nullable: true},
+		{Name: "target_type", Type: field.TypeString, Nullable: true, Size: 32},
+		{Name: "is_read", Type: field.TypeBool, Default: false},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "read_at", Type: field.TypeTime, Nullable: true},
+	}
+	// NotificationsTable holds the schema information for the "notifications" table.
+	NotificationsTable = &schema.Table{
+		Name:       "notifications",
+		Columns:    NotificationsColumns,
+		PrimaryKey: []*schema.Column{NotificationsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "notification_user_id_is_read_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{NotificationsColumns[1], NotificationsColumns[8], NotificationsColumns[9]},
+			},
+			{
+				Name:    "notification_user_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{NotificationsColumns[1], NotificationsColumns[9]},
+			},
+		},
+	}
 	// PostsColumns holds the columns for the "posts" table.
 	PostsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUint64, Increment: true},
@@ -188,6 +220,7 @@ var (
 		CommentsTable,
 		FollowsTable,
 		LikeRecordsTable,
+		NotificationsTable,
 		PostsTable,
 		UsersTable,
 	}

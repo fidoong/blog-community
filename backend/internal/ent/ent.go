@@ -16,6 +16,7 @@ import (
 	"github.com/blog/blog-community/internal/ent/comment"
 	"github.com/blog/blog-community/internal/ent/follow"
 	"github.com/blog/blog-community/internal/ent/likerecord"
+	"github.com/blog/blog-community/internal/ent/notification"
 	"github.com/blog/blog-community/internal/ent/post"
 	"github.com/blog/blog-community/internal/ent/user"
 )
@@ -82,6 +83,7 @@ func checkColumn(t, c string) error {
 			comment.Table:       comment.ValidColumn,
 			follow.Table:        follow.ValidColumn,
 			likerecord.Table:    likerecord.ValidColumn,
+			notification.Table:  notification.ValidColumn,
 			post.Table:          post.ValidColumn,
 			user.Table:          user.ValidColumn,
 		})

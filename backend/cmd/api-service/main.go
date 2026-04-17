@@ -21,6 +21,8 @@ import (
 	followDelivery "github.com/blog/blog-community/internal/follow/delivery"
 	"github.com/blog/blog-community/internal/interaction"
 	interactionDelivery "github.com/blog/blog-community/internal/interaction/delivery"
+	"github.com/blog/blog-community/internal/notification"
+	notificationDelivery "github.com/blog/blog-community/internal/notification/delivery"
 	"github.com/blog/blog-community/internal/post"
 	postDelivery "github.com/blog/blog-community/internal/post/delivery"
 	"github.com/blog/blog-community/internal/user"
@@ -70,17 +72,22 @@ func main() {
 	}
 	tokenStore := auth.NewRedisTokenStore(redisClient)
 
+	// Initialize notification usecase first (used as notifier by other modules)
+	notificationUC := notification.InitializeUseCase(client)
+
 	// Wire up handlers — each module owns its own route registration
 	userServer := user.InitializeServer(cfg, client, tokenStore)
 	postHandler := post.InitializeHandler(client, redisClient)
-	commentHandler := comment.InitializeHandler(client)
-	interactionHandler := interaction.InitializeHandler(client, redisClient)
+	commentHandler := comment.InitializeHandler(client, notificationUC)
+	interactionHandler := interaction.InitializeHandler(client, redisClient, notificationUC)
+	followHandler := follow.InitializeHandler(client, notificationUC)
 
 	postServer := postDelivery.NewPostServer(postHandler)
 	feedServer := feedDelivery.NewFeedServer(feed.InitializeHandler(client, redisClient))
-	followServer := followDelivery.NewFollowServer(follow.InitializeHandler(client))
+	followServer := followDelivery.NewFollowServer(followHandler)
 	commentServer := commentDelivery.NewCommentServer(commentHandler)
 	interactionServer := interactionDelivery.NewInteractionServer(interactionHandler)
+	notificationServer := notificationDelivery.NewNotificationServer(notification.InitializeHandler(client))
 
 	// Setup router
 	r := gin.New()
@@ -106,6 +113,7 @@ func main() {
 	followServer.Register(api, authMiddleware)
 	commentServer.Register(api, authMiddleware)
 	interactionServer.Register(api, authMiddleware)
+	notificationServer.Register(api, authMiddleware)
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.HTTPPort,

@@ -11,14 +11,15 @@ import (
 	"github.com/blog/blog-community/internal/comment/delivery"
 	"github.com/blog/blog-community/internal/comment/infrastructure"
 	"github.com/blog/blog-community/internal/ent"
+	"github.com/blog/blog-community/internal/notification/domain"
 )
 
 // Injectors from wire.go:
 
 // InitializeHandler wires all dependencies for the comment HTTP handler.
-func InitializeHandler(client *ent.Client) *delivery.CommentHandler {
+func InitializeHandler(client *ent.Client, notifier domain.Notifier) *delivery.CommentHandler {
 	commentRepository := infrastructure.NewEntCommentRepo(client)
-	useCase := application.NewCommentUseCase(commentRepository)
+	useCase := application.NewCommentUseCase(commentRepository, notifier)
 	commentHandler := delivery.NewCommentHandler(useCase)
 	return commentHandler
 }

@@ -11,14 +11,15 @@ import (
 	"github.com/blog/blog-community/internal/follow/application"
 	"github.com/blog/blog-community/internal/follow/delivery"
 	"github.com/blog/blog-community/internal/follow/infrastructure"
+	"github.com/blog/blog-community/internal/notification/domain"
 )
 
 // Injectors from wire.go:
 
 // InitializeHandler injects follow dependencies.
-func InitializeHandler(client *ent.Client) *delivery.FollowHandler {
+func InitializeHandler(client *ent.Client, notifier domain.Notifier) *delivery.FollowHandler {
 	repository := infrastructure.NewEntFollowRepo(client)
-	useCase := application.NewFollowUseCase(repository)
+	useCase := application.NewFollowUseCase(repository, notifier)
 	followHandler := delivery.NewFollowHandler(useCase)
 	return followHandler
 }

@@ -85,6 +85,22 @@ func (r *entCommentRepo) Delete(ctx context.Context, id uint64) error {
 	return r.client.Comment.DeleteOneID(id).Exec(ctx)
 }
 
+func (r *entCommentRepo) GetPostAuthorID(ctx context.Context, postID uint64) (uint64, error) {
+	p, err := r.client.Post.Get(ctx, postID)
+	if err != nil {
+		return 0, err
+	}
+	return p.AuthorID, nil
+}
+
+func (r *entCommentRepo) GetCommentAuthorID(ctx context.Context, commentID uint64) (uint64, error) {
+	c, err := r.client.Comment.Get(ctx, commentID)
+	if err != nil {
+		return 0, err
+	}
+	return c.AuthorID, nil
+}
+
 func toDomain(ec *ent.Comment) *domain.Comment {
 	c := &domain.Comment{
 		ID:        ec.ID,

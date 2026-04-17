@@ -9,6 +9,7 @@ import (
 	"github.com/blog/blog-community/internal/ent/comment"
 	"github.com/blog/blog-community/internal/ent/follow"
 	"github.com/blog/blog-community/internal/ent/likerecord"
+	"github.com/blog/blog-community/internal/ent/notification"
 	"github.com/blog/blog-community/internal/ent/post"
 	"github.com/blog/blog-community/internal/ent/schema"
 	"github.com/blog/blog-community/internal/ent/user"
@@ -52,6 +53,24 @@ func init() {
 	likerecordDescCreatedAt := likerecordFields[4].Descriptor()
 	// likerecord.DefaultCreatedAt holds the default value on creation for the created_at field.
 	likerecord.DefaultCreatedAt = likerecordDescCreatedAt.Default.(func() time.Time)
+	notificationFields := schema.Notification{}.Fields()
+	_ = notificationFields
+	// notificationDescTitle is the schema descriptor for title field.
+	notificationDescTitle := notificationFields[3].Descriptor()
+	// notification.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	notification.TitleValidator = notificationDescTitle.Validators[0].(func(string) error)
+	// notificationDescTargetType is the schema descriptor for target_type field.
+	notificationDescTargetType := notificationFields[7].Descriptor()
+	// notification.TargetTypeValidator is a validator for the "target_type" field. It is called by the builders before save.
+	notification.TargetTypeValidator = notificationDescTargetType.Validators[0].(func(string) error)
+	// notificationDescIsRead is the schema descriptor for is_read field.
+	notificationDescIsRead := notificationFields[8].Descriptor()
+	// notification.DefaultIsRead holds the default value on creation for the is_read field.
+	notification.DefaultIsRead = notificationDescIsRead.Default.(bool)
+	// notificationDescCreatedAt is the schema descriptor for created_at field.
+	notificationDescCreatedAt := notificationFields[9].Descriptor()
+	// notification.DefaultCreatedAt holds the default value on creation for the created_at field.
+	notification.DefaultCreatedAt = notificationDescCreatedAt.Default.(func() time.Time)
 	postFields := schema.Post{}.Fields()
 	_ = postFields
 	// postDescTitle is the schema descriptor for title field.

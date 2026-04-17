@@ -27,4 +27,6 @@ type CommentRepository interface {
 	ListByPost(ctx context.Context, postID uint64, page, pageSize int) ([]*Comment, int64, error)
 	ListReplies(ctx context.Context, parentID uint64) ([]*Comment, error)
 	Delete(ctx context.Context, id uint64) error
+	GetPostAuthorID(ctx context.Context, postID uint64) (uint64, error)
+	GetCommentAuthorID(ctx context.Context, commentID uint64) (uint64, error)
 }

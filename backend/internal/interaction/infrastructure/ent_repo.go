@@ -105,3 +105,19 @@ func (r *entInteractionRepo) CountCollects(ctx context.Context, targetType strin
 		Count(ctx)
 	return int64(cnt), err
 }
+
+func (r *entInteractionRepo) GetPostAuthorID(ctx context.Context, postID uint64) (uint64, error) {
+	p, err := r.client.Post.Get(ctx, postID)
+	if err != nil {
+		return 0, err
+	}
+	return p.AuthorID, nil
+}
+
+func (r *entInteractionRepo) GetCommentAuthorID(ctx context.Context, commentID uint64) (uint64, error) {
+	c, err := r.client.Comment.Get(ctx, commentID)
+	if err != nil {
+		return 0, err
+	}
+	return c.AuthorID, nil
+}

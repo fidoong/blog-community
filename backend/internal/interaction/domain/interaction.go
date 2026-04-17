@@ -40,6 +40,9 @@ type Repository interface {
 	DeleteCollect(ctx context.Context, targetType string, targetID, userID uint64) error
 	HasCollected(ctx context.Context, targetType string, targetID, userID uint64) (bool, error)
 	CountCollects(ctx context.Context, targetType string, targetID uint64) (int64, error)
+
+	GetPostAuthorID(ctx context.Context, postID uint64) (uint64, error)
+	GetCommentAuthorID(ctx context.Context, commentID uint64) (uint64, error)
 }
 
 // Counter defines a caching counter for interactions.

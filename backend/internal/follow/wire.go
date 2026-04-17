@@ -9,10 +9,11 @@ import (
 	"github.com/blog/blog-community/internal/follow/application"
 	"github.com/blog/blog-community/internal/follow/delivery"
 	"github.com/blog/blog-community/internal/follow/infrastructure"
+	notificationDomain "github.com/blog/blog-community/internal/notification/domain"
 )
 
 // InitializeHandler injects follow dependencies.
-func InitializeHandler(client *ent.Client) *delivery.FollowHandler {
+func InitializeHandler(client *ent.Client, notifier notificationDomain.Notifier) *delivery.FollowHandler {
 	wire.Build(
 		infrastructure.NewEntFollowRepo,
 		application.NewFollowUseCase,
