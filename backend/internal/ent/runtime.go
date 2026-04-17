@@ -7,6 +7,7 @@ import (
 
 	"github.com/blog/blog-community/internal/ent/collectrecord"
 	"github.com/blog/blog-community/internal/ent/comment"
+	"github.com/blog/blog-community/internal/ent/follow"
 	"github.com/blog/blog-community/internal/ent/likerecord"
 	"github.com/blog/blog-community/internal/ent/post"
 	"github.com/blog/blog-community/internal/ent/schema"
@@ -39,6 +40,12 @@ func init() {
 	comment.DefaultUpdatedAt = commentDescUpdatedAt.Default.(func() time.Time)
 	// comment.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	comment.UpdateDefaultUpdatedAt = commentDescUpdatedAt.UpdateDefault.(func() time.Time)
+	followFields := schema.Follow{}.Fields()
+	_ = followFields
+	// followDescCreatedAt is the schema descriptor for created_at field.
+	followDescCreatedAt := followFields[3].Descriptor()
+	// follow.DefaultCreatedAt holds the default value on creation for the created_at field.
+	follow.DefaultCreatedAt = followDescCreatedAt.Default.(func() time.Time)
 	likerecordFields := schema.LikeRecord{}.Fields()
 	_ = likerecordFields
 	// likerecordDescCreatedAt is the schema descriptor for created_at field.

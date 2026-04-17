@@ -63,6 +63,31 @@ var (
 			},
 		},
 	}
+	// FollowsColumns holds the columns for the "follows" table.
+	FollowsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUint64, Increment: true},
+		{Name: "follower_id", Type: field.TypeUint64},
+		{Name: "following_id", Type: field.TypeUint64},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// FollowsTable holds the schema information for the "follows" table.
+	FollowsTable = &schema.Table{
+		Name:       "follows",
+		Columns:    FollowsColumns,
+		PrimaryKey: []*schema.Column{FollowsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "follow_follower_id_following_id",
+				Unique:  true,
+				Columns: []*schema.Column{FollowsColumns[1], FollowsColumns[2]},
+			},
+			{
+				Name:    "follow_following_id",
+				Unique:  false,
+				Columns: []*schema.Column{FollowsColumns[2]},
+			},
+		},
+	}
 	// LikeRecordsColumns holds the columns for the "like_records" table.
 	LikeRecordsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUint64, Increment: true},
@@ -161,6 +186,7 @@ var (
 	Tables = []*schema.Table{
 		CollectRecordsTable,
 		CommentsTable,
+		FollowsTable,
 		LikeRecordsTable,
 		PostsTable,
 		UsersTable,

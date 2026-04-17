@@ -39,9 +39,12 @@ export function Header() {
           <ThemeToggle />
           {user ? (
             <>
-              <span className="hidden text-sm text-muted-foreground sm:inline">
+              <Link
+                href={`/user/${user.id}`}
+                className="hidden text-sm font-medium text-muted-foreground hover:text-foreground transition-colors sm:inline"
+              >
                 {user.username}
-              </span>
+              </Link>
               <Button variant="ghost" size="sm" onClick={handleLogout} disabled={logoutMutation.isPending}>
                 登出
               </Button>

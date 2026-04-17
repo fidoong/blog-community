@@ -12,6 +12,9 @@ type CollectRecord func(*sql.Selector)
 // Comment is the predicate function for comment builders.
 type Comment func(*sql.Selector)
 
+// Follow is the predicate function for follow builders.
+type Follow func(*sql.Selector)
+
 // LikeRecord is the predicate function for likerecord builders.
 type LikeRecord func(*sql.Selector)
 

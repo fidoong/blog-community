@@ -22,6 +22,21 @@ const apiClient = ky.create({
             .catch(() => ({ message: "", code: "" }));
           throw new ApiError(body.message || "请求失败", state.response.status, body.code || undefined);
         }
+        // Unwrap standard API envelope: { code, message, data, timestamp }
+        const clone = state.response.clone();
+        const body = await clone.json().catch(() => null);
+        if (
+          body &&
+          typeof body === "object" &&
+          "data" in body &&
+          "code" in body
+        ) {
+          return new Response(JSON.stringify(body.data), {
+            status: state.response.status,
+            statusText: state.response.statusText,
+            headers: state.response.headers,
+          });
+        }
         return state.response;
       },
     ],

@@ -23,6 +23,8 @@ import (
 	"github.com/blog/blog-community/internal/ent/migrate"
 	"github.com/blog/blog-community/internal/feed"
 	feedDelivery "github.com/blog/blog-community/internal/feed/delivery"
+	"github.com/blog/blog-community/internal/follow"
+	followDelivery "github.com/blog/blog-community/internal/follow/delivery"
 	"github.com/blog/blog-community/internal/interaction"
 	interactionDelivery "github.com/blog/blog-community/internal/interaction/delivery"
 	"github.com/blog/blog-community/internal/post"
@@ -73,6 +75,7 @@ func main() {
 
 	postServer := postDelivery.NewPostServer(postHandler)
 	feedServer := feedDelivery.NewFeedServer(feed.InitializeHandler(client))
+	followServer := followDelivery.NewFollowServer(follow.InitializeHandler(client))
 	commentServer := commentDelivery.NewCommentServer(commentHandler)
 	interactionServer := interactionDelivery.NewInteractionServer(interactionHandler)
 
@@ -97,6 +100,7 @@ func main() {
 	userServer.Register(api, authMiddleware)
 	postServer.Register(api, authMiddleware)
 	feedServer.Register(api, authMiddleware)
+	followServer.Register(api, authMiddleware)
 	commentServer.Register(api, authMiddleware)
 	interactionServer.Register(api, authMiddleware)
 

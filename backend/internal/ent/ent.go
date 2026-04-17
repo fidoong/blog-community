@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/blog/blog-community/internal/ent/collectrecord"
 	"github.com/blog/blog-community/internal/ent/comment"
+	"github.com/blog/blog-community/internal/ent/follow"
 	"github.com/blog/blog-community/internal/ent/likerecord"
 	"github.com/blog/blog-community/internal/ent/post"
 	"github.com/blog/blog-community/internal/ent/user"
@@ -79,6 +80,7 @@ func checkColumn(t, c string) error {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			collectrecord.Table: collectrecord.ValidColumn,
 			comment.Table:       comment.ValidColumn,
+			follow.Table:        follow.ValidColumn,
 			likerecord.Table:    likerecord.ValidColumn,
 			post.Table:          post.ValidColumn,
 			user.Table:          user.ValidColumn,

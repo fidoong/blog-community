@@ -16,6 +16,8 @@ type Tx struct {
 	CollectRecord *CollectRecordClient
 	// Comment is the client for interacting with the Comment builders.
 	Comment *CommentClient
+	// Follow is the client for interacting with the Follow builders.
+	Follow *FollowClient
 	// LikeRecord is the client for interacting with the LikeRecord builders.
 	LikeRecord *LikeRecordClient
 	// Post is the client for interacting with the Post builders.
@@ -155,6 +157,7 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.CollectRecord = NewCollectRecordClient(tx.config)
 	tx.Comment = NewCommentClient(tx.config)
+	tx.Follow = NewFollowClient(tx.config)
 	tx.LikeRecord = NewLikeRecordClient(tx.config)
 	tx.Post = NewPostClient(tx.config)
 	tx.User = NewUserClient(tx.config)
