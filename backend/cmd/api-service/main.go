@@ -10,13 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"github.com/blog/blog-community/configs"
-	"github.com/blog/blog-community/pkg/auth"
-	"github.com/blog/blog-community/pkg/cache"
-	"github.com/blog/blog-community/pkg/logger"
-	"github.com/blog/blog-community/pkg/middleware"
 	"github.com/blog/blog-community/internal/comment"
 	commentDelivery "github.com/blog/blog-community/internal/comment/delivery"
 	"github.com/blog/blog-community/internal/ent"
@@ -30,6 +24,12 @@ import (
 	"github.com/blog/blog-community/internal/post"
 	postDelivery "github.com/blog/blog-community/internal/post/delivery"
 	"github.com/blog/blog-community/internal/user"
+	"github.com/blog/blog-community/pkg/auth"
+	"github.com/blog/blog-community/pkg/cache"
+	"github.com/blog/blog-community/pkg/logger"
+	"github.com/blog/blog-community/pkg/middleware"
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
 	_ "github.com/lib/pq"
 )
@@ -63,8 +63,11 @@ func main() {
 	}
 
 	// Connect to Redis
-	redisClient := cache.NewRedisClient(cfg.RedisAddr)
+	redisClient := cache.NewRedisClientWithPassword(cfg.RedisAddr, cfg.RedisPassword)
 	defer redisClient.Close()
+	if err := redisClient.Ping(ctx).Err(); err != nil {
+		log.Fatal("failed connecting to redis", zap.Error(err))
+	}
 	tokenStore := auth.NewRedisTokenStore(redisClient)
 
 	// Wire up handlers — each module owns its own route registration

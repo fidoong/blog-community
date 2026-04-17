@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"context"
+	"strings"
 
 	"github.com/blog/blog-community/internal/ent"
 	"github.com/blog/blog-community/internal/ent/user"
@@ -20,16 +21,28 @@ func NewEntUserRepo(client *ent.Client) domain.UserRepository {
 
 func (r *entUserRepo) Create(ctx context.Context, u *domain.User) error {
 	client := database.ExtractTx(ctx, r.client)
-	created, err := client.User.Create().
+	creator := client.User.Create().
 		SetEmail(u.Email).
 		SetUsername(u.Username).
 		SetPasswordHash(u.PasswordHash).
-		SetAvatarURL(u.AvatarURL).
 		SetOauthProvider(user.OauthProvider(u.OAuthProvider)).
-		SetOauthID(u.OAuthID).
-		SetRole(u.Role).
-		Save(ctx)
+		SetRole(u.Role)
+	if avatarURL := strPtr(u.AvatarURL); avatarURL != nil {
+		creator.SetAvatarURL(*avatarURL)
+	}
+	if oauthID := strPtr(u.OAuthID); oauthID != nil {
+		creator.SetOauthID(*oauthID)
+	}
+	created, err := creator.Save(ctx)
 	if err != nil {
+		if ent.IsConstraintError(err) {
+			switch {
+			case strings.Contains(err.Error(), "users_username_key") || strings.Contains(err.Error(), "username"):
+				return domain.ErrUsernameAlreadyExist
+			case strings.Contains(err.Error(), "users_email_key") || strings.Contains(err.Error(), "email"):
+				return domain.ErrEmailAlreadyExist
+			}
+		}
 		return err
 	}
 	u.ID = created.ID
@@ -76,12 +89,20 @@ func (r *entUserRepo) GetByOAuth(ctx context.Context, provider, oauthID string) 
 
 func (r *entUserRepo) Update(ctx context.Context, u *domain.User) error {
 	client := database.ExtractTx(ctx, r.client)
-	return client.User.UpdateOneID(u.ID).
+	updater := client.User.UpdateOneID(u.ID).
 		SetUsername(u.Username).
-		SetAvatarURL(u.AvatarURL).
-		SetOauthID(u.OAuthID).
-		SetOauthProvider(user.OauthProvider(u.OAuthProvider)).
-		Exec(ctx)
+		SetOauthProvider(user.OauthProvider(u.OAuthProvider))
+	if avatarURL := strPtr(u.AvatarURL); avatarURL != nil {
+		updater.SetAvatarURL(*avatarURL)
+	} else {
+		updater.ClearAvatarURL()
+	}
+	if oauthID := strPtr(u.OAuthID); oauthID != nil {
+		updater.SetOauthID(*oauthID)
+	} else {
+		updater.ClearOauthID()
+	}
+	return updater.Exec(ctx)
 }
 
 func toDomain(eu *ent.User) *domain.User {

@@ -4,10 +4,9 @@ import (
 	"context"
 	stderrors "errors"
 
-	"github.com/lib/pq"
+	"github.com/blog/blog-community/internal/user/domain"
 	"github.com/blog/blog-community/pkg/errors"
 	"github.com/blog/blog-community/pkg/hashutil"
-	"github.com/blog/blog-community/internal/user/domain"
 )
 
 // UseCase defines user application operations.
@@ -50,8 +49,8 @@ func (uc *userUseCase) Register(ctx context.Context, email, username, password s
 		if stderrors.Is(err, domain.ErrEmailAlreadyExist) {
 			return nil, domain.ErrEmailAlreadyExist
 		}
-		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
-			return nil, domain.ErrEmailAlreadyExist
+		if stderrors.Is(err, domain.ErrUsernameAlreadyExist) {
+			return nil, domain.ErrUsernameAlreadyExist
 		}
 		return nil, errors.Wrap(err, errors.ErrInternal)
 	}

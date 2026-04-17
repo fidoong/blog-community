@@ -9,3 +9,10 @@ func NewRedisClient(addr string) *redis.Client {
 		Addr: addr,
 	})
 }
+
+func NewRedisClientWithPassword(addr, password string) *redis.Client {
+	return redis.NewClient(&redis.Options{
+		Addr:     addr,
+		Password: password,
+	})
+}

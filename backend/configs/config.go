@@ -19,7 +19,8 @@ type Config struct {
 	DBPassword string `mapstructure:"db_password"`
 	DBName     string `mapstructure:"db_name"`
 
-	RedisAddr string `mapstructure:"redis_addr"`
+	RedisAddr     string `mapstructure:"redis_addr"`
+	RedisPassword string `mapstructure:"redis_password"`
 
 	JWTSecret string `mapstructure:"jwt_secret"`
 
@@ -49,6 +50,7 @@ func Load() (*Config, error) {
 	v.SetDefault("db_password", "blog123")
 	v.SetDefault("db_name", "blog")
 	v.SetDefault("redis_addr", "127.0.0.1:6379")
+	v.SetDefault("redis_password", "")
 	v.SetDefault("jwt_secret", "super-secret-key-change-in-production")
 	v.SetDefault("frontend_url", "http://localhost:3000")
 	v.SetDefault("api_base_url", "http://localhost:8080/api/v1")

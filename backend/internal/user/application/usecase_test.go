@@ -5,12 +5,12 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/blog/blog-community/internal/user/application/mocks"
 	"github.com/blog/blog-community/internal/user/domain"
 	apperrors "github.com/blog/blog-community/pkg/errors"
 	"github.com/blog/blog-community/pkg/hashutil"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestUserUseCase_Register(t *testing.T) {
@@ -37,6 +37,7 @@ func TestUserUseCase_Register(t *testing.T) {
 		assert.Equal(t, "testuser", u.Username)
 		assert.NotEmpty(t, u.PasswordHash)
 		assert.Equal(t, domain.OAuthProviderNone, u.OAuthProvider)
+		assert.Empty(t, u.OAuthID)
 		assert.Equal(t, domain.RoleUser, u.Role)
 		repo.AssertExpectations(t)
 	})
@@ -54,6 +55,22 @@ func TestUserUseCase_Register(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, u)
 		assert.Equal(t, domain.ErrEmailAlreadyExist, err)
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("duplicate username", func(t *testing.T) {
+		repo := new(mocks.MockUserRepository)
+		tx := new(mocks.MockTransactor)
+		uc := NewUserUseCase(repo, tx)
+
+		repo.On("Create", ctx, mock.AnythingOfType("*domain.User")).
+			Return(domain.ErrUsernameAlreadyExist)
+
+		u, err := uc.Register(ctx, "dup-name@example.com", "dupuser", "Password123!")
+
+		assert.Error(t, err)
+		assert.Nil(t, u)
+		assert.Equal(t, domain.ErrUsernameAlreadyExist, err)
 		repo.AssertExpectations(t)
 	})
 }

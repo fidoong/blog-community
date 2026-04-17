@@ -4,8 +4,8 @@ import (
 	"context"
 	stderrors "errors"
 
-	"github.com/blog/blog-community/pkg/errors"
 	"github.com/blog/blog-community/internal/user/domain"
+	"github.com/blog/blog-community/pkg/errors"
 )
 
 func (uc *userUseCase) OAuthLoginOrRegister(ctx context.Context, provider, oauthID, email, username, avatarURL string) (*domain.User, error) {
@@ -46,6 +46,9 @@ func (uc *userUseCase) OAuthLoginOrRegister(ctx context.Context, provider, oauth
 		Role:          domain.RoleUser,
 	}
 	if err := uc.repo.Create(ctx, u); err != nil {
+		if stderrors.Is(err, domain.ErrEmailAlreadyExist) || stderrors.Is(err, domain.ErrUsernameAlreadyExist) {
+			return nil, err
+		}
 		return nil, errors.Wrap(err, errors.ErrInternal)
 	}
 	return u, nil
