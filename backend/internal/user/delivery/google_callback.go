@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/blog/blog-community/pkg/auth"
@@ -61,5 +62,12 @@ func (h *OAuthHandler) GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(http.StatusFound, h.frontendURL+"/login?token="+accessToken)
+	refreshToken, err := auth.GenerateRefreshToken()
+	if err != nil {
+		c.Error(errors.Wrap(err, errors.ErrInternal))
+		return
+	}
+	_ = h.tokenStore.SaveRefreshToken(c.Request.Context(), u.ID, refreshToken, 7*24*time.Hour)
+
+	c.Redirect(http.StatusFound, h.frontendURL+"/login?token="+accessToken+"&refreshToken="+refreshToken)
 }

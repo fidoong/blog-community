@@ -15,9 +15,13 @@ function OAuthCallbackHandler() {
 
   useEffect(() => {
     const token = searchParams.get("token");
+    const refreshToken = searchParams.get("refreshToken");
     if (token) {
       import("@/stores/auth-store").then(({ useAuthStore }) => {
         useAuthStore.getState().setToken(token);
+        if (refreshToken) {
+          useAuthStore.getState().setRefreshToken(refreshToken);
+        }
         router.replace("/");
       });
     }

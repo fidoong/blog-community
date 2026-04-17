@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/blog/blog-community/internal/ent"
 	"github.com/blog/blog-community/internal/user/domain"
-	"github.com/blog/blog-community/internal/user/ent"
 )
 
 type txKey struct{}

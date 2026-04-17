@@ -14,6 +14,7 @@ type UseCase interface {
 	Register(ctx context.Context, email, username, password string) (*domain.User, error)
 	Login(ctx context.Context, email, password string) (*domain.User, error)
 	GetByID(ctx context.Context, id uint64) (*domain.User, error)
+	Update(ctx context.Context, u *domain.User) error
 	OAuthLoginOrRegister(ctx context.Context, provider, oauthID, email, username, avatarURL string) (*domain.User, error)
 }
 
@@ -75,4 +76,11 @@ func (uc *userUseCase) GetByID(ctx context.Context, id uint64) (*domain.User, er
 		return nil, errors.Wrap(err, errors.ErrInternal)
 	}
 	return u, nil
+}
+
+func (uc *userUseCase) Update(ctx context.Context, u *domain.User) error {
+	if err := uc.repo.Update(ctx, u); err != nil {
+		return errors.Wrap(err, errors.ErrInternal)
+	}
+	return nil
 }

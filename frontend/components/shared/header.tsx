@@ -4,9 +4,19 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuthStore } from "@/stores/auth-store";
+import { useLogout } from "@/hooks/queries/use-auth";
 
 export function Header() {
-  const { user, logout } = useAuthStore();
+  const { user, refreshToken, logout } = useAuthStore();
+  const logoutMutation = useLogout();
+
+  const handleLogout = () => {
+    if (refreshToken) {
+      logoutMutation.mutate({ refreshToken });
+    } else {
+      logout();
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -32,7 +42,7 @@ export function Header() {
               <span className="hidden text-sm text-muted-foreground sm:inline">
                 {user.username}
               </span>
-              <Button variant="ghost" size="sm" onClick={logout}>
+              <Button variant="ghost" size="sm" onClick={handleLogout} disabled={logoutMutation.isPending}>
                 登出
               </Button>
             </>

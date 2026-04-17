@@ -11,8 +11,10 @@ interface User {
 interface AuthState {
   user: User | null;
   token: string | null;
-  setAuth: (user: User, token: string) => void;
+  refreshToken: string | null;
+  setAuth: (user: User, token: string, refreshToken: string) => void;
   setToken: (token: string) => void;
+  setRefreshToken: (refreshToken: string) => void;
   logout: () => void;
 }
 
@@ -21,13 +23,19 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       token: null,
-      setAuth: (user, token) => set({ user, token }),
+      refreshToken: null,
+      setAuth: (user, token, refreshToken) => set({ user, token, refreshToken }),
       setToken: (token) => set({ token }),
-      logout: () => set({ user: null, token: null }),
+      setRefreshToken: (refreshToken) => set({ refreshToken }),
+      logout: () => set({ user: null, token: null, refreshToken: null }),
     }),
     {
       name: "auth-storage",
-      partialize: (state) => ({ user: state.user, token: state.token }),
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+        refreshToken: state.refreshToken,
+      }),
     }
   )
 );

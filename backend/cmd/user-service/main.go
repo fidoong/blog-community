@@ -13,11 +13,22 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"github.com/blog/blog-community/configs"
+	"github.com/blog/blog-community/pkg/auth"
+	"github.com/blog/blog-community/pkg/cache"
 	"github.com/blog/blog-community/pkg/logger"
 	"github.com/blog/blog-community/pkg/middleware"
+	"github.com/blog/blog-community/internal/comment/application"
+	commentDelivery "github.com/blog/blog-community/internal/comment/delivery"
+	commentInfra "github.com/blog/blog-community/internal/comment/infrastructure"
+	"github.com/blog/blog-community/internal/ent"
+	"github.com/blog/blog-community/internal/ent/migrate"
+	interactionApp "github.com/blog/blog-community/internal/interaction/application"
+	interactionDelivery "github.com/blog/blog-community/internal/interaction/delivery"
+	interactionInfra "github.com/blog/blog-community/internal/interaction/infrastructure"
+	postApplication "github.com/blog/blog-community/internal/post/application"
+	postDelivery "github.com/blog/blog-community/internal/post/delivery"
+	postInfra "github.com/blog/blog-community/internal/post/infrastructure"
 	"github.com/blog/blog-community/internal/user"
-	"github.com/blog/blog-community/internal/user/ent"
-	"github.com/blog/blog-community/internal/user/ent/migrate"
 
 	_ "github.com/lib/pq"
 )
@@ -50,8 +61,13 @@ func main() {
 		log.Fatal("failed creating schema resources", zap.Error(err))
 	}
 
+	// Connect to Redis
+	redisClient := cache.NewRedisClient(cfg.RedisAddr)
+	defer redisClient.Close()
+	tokenStore := auth.NewRedisTokenStore(redisClient)
+
 	// Wire up handler
-	server := user.InitializeServer(cfg, client)
+	server := user.InitializeServer(cfg, client, tokenStore)
 
 	// Setup router
 	r := gin.New()
@@ -70,7 +86,37 @@ func main() {
 
 	// API routes
 	api := r.Group("/api/v1")
-	server.Register(api)
+	authMiddleware := middleware.AuthRequired(cfg.JWTSecret)
+	server.Register(api, authMiddleware)
+
+	// Post routes
+	postRepo := postInfra.NewEntPostRepo(client)
+	postUseCase := postApplication.NewPostUseCase(postRepo)
+	postHandler := postDelivery.NewPostHandler(postUseCase)
+	api.GET("/posts", postHandler.List)
+	api.GET("/posts/:id", postHandler.GetByID)
+	api.POST("/posts", authMiddleware, postHandler.Create)
+	api.PUT("/posts/:id", authMiddleware, postHandler.Update)
+	api.DELETE("/posts/:id", authMiddleware, postHandler.Delete)
+	api.POST("/posts/:id/publish", authMiddleware, postHandler.Publish)
+
+	// Comment routes
+	commentRepo := commentInfra.NewEntCommentRepo(client)
+	commentUseCase := application.NewCommentUseCase(commentRepo)
+	commentHandler := commentDelivery.NewCommentHandler(commentUseCase)
+	api.GET("/posts/:id/comments", commentHandler.List)
+	api.POST("/posts/:id/comments", authMiddleware, commentHandler.Create)
+	api.DELETE("/comments/:id", authMiddleware, commentHandler.Delete)
+
+	// Interaction routes
+	interactionRepo := interactionInfra.NewEntInteractionRepo(client)
+	interactionCounter := interactionInfra.NewRedisCounter(redisClient)
+	interactionUseCase := interactionApp.NewInteractionUseCase(interactionRepo, interactionCounter)
+	interactionHandler := interactionDelivery.NewInteractionHandler(interactionUseCase)
+	api.POST("/likes/:targetType/:targetId", authMiddleware, interactionHandler.ToggleLike)
+	api.GET("/likes/:targetType/:targetId", interactionHandler.GetLikeStatus)
+	api.POST("/collects/:targetType/:targetId", authMiddleware, interactionHandler.ToggleCollect)
+	api.GET("/collects/:targetType/:targetId", interactionHandler.GetCollectStatus)
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.HTTPPort,

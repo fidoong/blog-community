@@ -1,44 +1,64 @@
 package configs
 
+import (
+	"os"
+	"strconv"
+)
+
 // Config holds all application configurations.
 type Config struct {
-	AppEnv   string `mapstructure:"APP_ENV"`
-	AppName  string `mapstructure:"APP_NAME"`
-	HTTPPort string `mapstructure:"HTTP_PORT"`
+	AppEnv   string
+	AppName  string
+	HTTPPort string
 
-	DBHost     string `mapstructure:"DB_HOST"`
-	DBPort     string `mapstructure:"DB_PORT"`
-	DBUser     string `mapstructure:"DB_USER"`
-	DBPassword string `mapstructure:"DB_PASSWORD"`
-	DBName     string `mapstructure:"DB_NAME"`
+	DBHost     string
+	DBPort     string
+	DBUser     string
+	DBPassword string
+	DBName     string
 
-	RedisAddr string `mapstructure:"REDIS_ADDR"`
+	RedisAddr string
 
-	JWTSecret string `mapstructure:"JWT_SECRET"`
+	JWTSecret string
 
-	FrontendURL string `mapstructure:"FRONTEND_URL"`
-	APIBaseURL  string `mapstructure:"API_BASE_URL"`
+	FrontendURL string
+	APIBaseURL  string
 
-	GitHubClientID     string `mapstructure:"GITHUB_CLIENT_ID"`
-	GitHubClientSecret string `mapstructure:"GITHUB_CLIENT_SECRET"`
-	GoogleClientID     string `mapstructure:"GOOGLE_CLIENT_ID"`
-	GoogleClientSecret string `mapstructure:"GOOGLE_CLIENT_SECRET"`
+	GitHubClientID     string
+	GitHubClientSecret string
+	GoogleClientID     string
+	GoogleClientSecret string
+}
+
+func getEnv(key, defaultValue string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return defaultValue
 }
 
 func Load() (*Config, error) {
-	// TODO: integrate viper for real env loading
 	return &Config{
-		AppEnv:      "development",
-		AppName:     "user-service",
-		HTTPPort:    "8080",
-		DBHost:      "localhost",
-		DBPort:      "5432",
-		DBUser:      "blog",
-		DBPassword:  "blog123",
-		DBName:      "blog",
-		RedisAddr:   "localhost:6379",
-		JWTSecret:   "super-secret-key-change-in-production",
-		FrontendURL: "http://localhost:3000",
-		APIBaseURL:  "http://localhost:8080/api/v1",
+		AppEnv:             getEnv("APP_ENV", "development"),
+		AppName:            getEnv("APP_NAME", "user-service"),
+		HTTPPort:           getEnv("HTTP_PORT", "8080"),
+		DBHost:             getEnv("DB_HOST", "localhost"),
+		DBPort:             getEnv("DB_PORT", "5432"),
+		DBUser:             getEnv("DB_USER", "blog"),
+		DBPassword:         getEnv("DB_PASSWORD", "blog123"),
+		DBName:             getEnv("DB_NAME", "blog"),
+		RedisAddr:          getEnv("REDIS_ADDR", "localhost:6379"),
+		JWTSecret:          getEnv("JWT_SECRET", "super-secret-key-change-in-production"),
+		FrontendURL:        getEnv("FRONTEND_URL", "http://localhost:3000"),
+		APIBaseURL:         getEnv("API_BASE_URL", "http://localhost:8080/api/v1"),
+		GitHubClientID:     getEnv("GITHUB_CLIENT_ID", ""),
+		GitHubClientSecret: getEnv("GITHUB_CLIENT_SECRET", ""),
+		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
+		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
 	}, nil
+}
+
+func mustAtoi(s string) int {
+	v, _ := strconv.Atoi(s)
+	return v
 }

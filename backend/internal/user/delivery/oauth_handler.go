@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
@@ -22,23 +23,25 @@ type OAuthHandler struct {
 	useCase      application.UseCase
 	jwtSecret    string
 	frontendURL  string
+	tokenStore   auth.TokenStore
 	githubOAuth  *oauth2.Config
 	googleOAuth  *oauth2.Config
 }
 
-func NewOAuthHandler(useCase application.UseCase, jwtSecret, frontendURL, apiBaseURL, ghClientID, ghClientSecret, gClientID, gClientSecret string) *OAuthHandler {
-	return newOAuthHandler(useCase, jwtSecret, frontendURL, apiBaseURL, ghClientID, ghClientSecret, gClientID, gClientSecret)
+func NewOAuthHandler(useCase application.UseCase, jwtSecret, frontendURL, apiBaseURL string, store auth.TokenStore, ghClientID, ghClientSecret, gClientID, gClientSecret string) *OAuthHandler {
+	return newOAuthHandler(useCase, jwtSecret, frontendURL, apiBaseURL, store, ghClientID, ghClientSecret, gClientID, gClientSecret)
 }
 
-func NewOAuthHandlerFromConfig(useCase application.UseCase, cfg *configs.Config) *OAuthHandler {
-	return newOAuthHandler(useCase, cfg.JWTSecret, cfg.FrontendURL, cfg.APIBaseURL, cfg.GitHubClientID, cfg.GitHubClientSecret, cfg.GoogleClientID, cfg.GoogleClientSecret)
+func NewOAuthHandlerFromConfig(useCase application.UseCase, cfg *configs.Config, store auth.TokenStore) *OAuthHandler {
+	return newOAuthHandler(useCase, cfg.JWTSecret, cfg.FrontendURL, cfg.APIBaseURL, store, cfg.GitHubClientID, cfg.GitHubClientSecret, cfg.GoogleClientID, cfg.GoogleClientSecret)
 }
 
-func newOAuthHandler(useCase application.UseCase, jwtSecret, frontendURL, apiBaseURL, ghClientID, ghClientSecret, gClientID, gClientSecret string) *OAuthHandler {
+func newOAuthHandler(useCase application.UseCase, jwtSecret, frontendURL, apiBaseURL string, store auth.TokenStore, ghClientID, ghClientSecret, gClientID, gClientSecret string) *OAuthHandler {
 	return &OAuthHandler{
 		useCase:     useCase,
 		jwtSecret:   jwtSecret,
 		frontendURL: frontendURL,
+		tokenStore:  store,
 		githubOAuth: &oauth2.Config{
 			ClientID:     ghClientID,
 			ClientSecret: ghClientSecret,
@@ -142,5 +145,12 @@ func (h *OAuthHandler) GitHubCallback(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(http.StatusFound, h.frontendURL+"/login?token="+accessToken)
+	refreshToken, err := auth.GenerateRefreshToken()
+	if err != nil {
+		c.Error(errors.Wrap(err, errors.ErrInternal))
+		return
+	}
+	_ = h.tokenStore.SaveRefreshToken(c.Request.Context(), u.ID, refreshToken, 7*24*time.Hour)
+
+	c.Redirect(http.StatusFound, h.frontendURL+"/login?token="+accessToken+"&refreshToken="+refreshToken)
 }

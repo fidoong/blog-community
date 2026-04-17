@@ -8,21 +8,22 @@ package user
 
 import (
 	"github.com/blog/blog-community/configs"
+	"github.com/blog/blog-community/internal/ent"
+	"github.com/blog/blog-community/pkg/auth"
 	"github.com/blog/blog-community/internal/user/application"
 	"github.com/blog/blog-community/internal/user/delivery"
-	"github.com/blog/blog-community/internal/user/ent"
 	"github.com/blog/blog-community/internal/user/infrastructure"
 )
 
 // Injectors from wire.go:
 
 // InitializeServer wires all dependencies for the user HTTP server.
-func InitializeServer(cfg *configs.Config, client *ent.Client) *delivery.Server {
+func InitializeServer(cfg *configs.Config, client *ent.Client, store auth.TokenStore) *delivery.Server {
 	userRepository := infrastructure.NewEntUserRepo(client)
 	transactor := infrastructure.NewEntTransactor(client)
 	useCase := application.NewUserUseCase(userRepository, transactor)
-	userHandler := delivery.NewUserHandlerFromConfig(useCase, cfg)
-	oAuthHandler := delivery.NewOAuthHandlerFromConfig(useCase, cfg)
+	userHandler := delivery.NewUserHandlerFromConfig(useCase, cfg, store)
+	oAuthHandler := delivery.NewOAuthHandlerFromConfig(useCase, cfg, store)
 	server := delivery.NewServer(userHandler, oAuthHandler)
 	return server
 }

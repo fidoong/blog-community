@@ -3,9 +3,9 @@ package infrastructure
 import (
 	"context"
 
+	"github.com/blog/blog-community/internal/ent"
+	"github.com/blog/blog-community/internal/ent/user"
 	"github.com/blog/blog-community/internal/user/domain"
-	"github.com/blog/blog-community/internal/user/ent"
-	"github.com/blog/blog-community/internal/user/ent/user"
 )
 
 type entUserRepo struct {
@@ -76,6 +76,7 @@ func (r *entUserRepo) GetByOAuth(ctx context.Context, provider, oauthID string) 
 func (r *entUserRepo) Update(ctx context.Context, u *domain.User) error {
 	client := ExtractTx(ctx, r.client)
 	return client.User.UpdateOneID(u.ID).
+		SetUsername(u.Username).
 		SetAvatarURL(u.AvatarURL).
 		SetOauthID(u.OAuthID).
 		SetOauthProvider(user.OauthProvider(u.OAuthProvider)).
