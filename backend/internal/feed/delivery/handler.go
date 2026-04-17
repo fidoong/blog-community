@@ -25,6 +25,7 @@ type feedItemResponse struct {
 	Summary      string   `json:"summary"`
 	CoverImage   string   `json:"coverImage"`
 	AuthorID     uint64   `json:"authorId"`
+	AuthorName   string   `json:"authorName"`
 	Tags         []string `json:"tags"`
 	LikeCount    int      `json:"likeCount"`
 	CommentCount int      `json:"commentCount"`
@@ -83,6 +84,7 @@ func toFeedItemResponse(item *domain.FeedItem) feedItemResponse {
 		Summary:      item.Summary,
 		CoverImage:   item.CoverImage,
 		AuthorID:     item.AuthorID,
+		AuthorName:   item.AuthorName,
 		Tags:         item.Tags,
 		LikeCount:    item.LikeCount,
 		CommentCount: item.CommentCount,

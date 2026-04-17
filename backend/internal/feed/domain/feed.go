@@ -14,6 +14,7 @@ type FeedItem struct {
 	Summary      string   `json:"summary"`
 	CoverImage   string   `json:"coverImage"`
 	AuthorID     uint64   `json:"authorId"`
+	AuthorName   string   `json:"authorName"`
 	Tags         []string `json:"tags"`
 	LikeCount    int      `json:"likeCount"`
 	CommentCount int      `json:"commentCount"`
@@ -58,6 +59,7 @@ func ToFeedItem(p *postdomain.Post) *FeedItem {
 		Summary:      p.Summary,
 		CoverImage:   p.CoverImage,
 		AuthorID:     p.AuthorID,
+		AuthorName:   p.AuthorName,
 		Tags:         p.Tags,
 		LikeCount:    p.LikeCount,
 		CommentCount: p.CommentCount,
