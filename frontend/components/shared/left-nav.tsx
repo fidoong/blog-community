@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Home, TrendingUp, BookOpen, Users, Settings } from "lucide-react";
+import { Home, TrendingUp, BookOpen, Users, Settings, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NavItemProps {
@@ -52,7 +52,8 @@ export function LeftNav() {
         <div className="px-4 text-xs font-semibold text-muted-foreground">个人中心</div>
       </div>
       
-      <NavItem href="/settings" icon={<Settings className="h-4 w-4" />} label="设置" index={4} />
+      <NavItem href="/me/posts" icon={<FileText className="h-4 w-4" />} label="我的文章" index={4} />
+      <NavItem href="/settings" icon={<Settings className="h-4 w-4" />} label="设置" index={5} />
     </nav>
   );
 }

@@ -63,3 +63,29 @@ export function usePublishPost() {
     onError: (error) => handleApiError(error),
   });
 }
+
+export function useUpdatePost() {
+  const queryClient = useQueryClient();
+
+  return useMutation<Post, ApiError, { id: string | number; payload: CreatePostPayload }>({
+    mutationFn: ({ id, payload }) =>
+      apiClient.put(`posts/${id}`, { json: payload }).json<Post>(),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ["post", id] });
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (error) => handleApiError(error),
+  });
+}
+
+export function useDeletePost() {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, ApiError, string | number>({
+    mutationFn: (id) => apiClient.delete(`posts/${id}`).json<void>(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (error) => handleApiError(error),
+  });
+}
