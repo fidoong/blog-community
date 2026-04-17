@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"context"
+	"sort"
 
 	"github.com/blog/blog-community/internal/ent"
 	"github.com/blog/blog-community/internal/ent/post"
@@ -83,6 +84,9 @@ func (r *entPostRepo) List(ctx context.Context, filter postDomain.ListFilter) ([
 	if filter.AuthorID > 0 {
 		q = q.Where(post.AuthorIDEQ(filter.AuthorID))
 	}
+	if len(filter.AuthorIDs) > 0 {
+		q = q.Where(post.AuthorIDIn(filter.AuthorIDs...))
+	}
 	if filter.Keyword != "" {
 		q = q.Where(
 			post.Or(
@@ -144,6 +148,90 @@ func (r *entPostRepo) List(ctx context.Context, filter postDomain.ListFilter) ([
 	}
 
 	return posts, int64(total), nil
+}
+
+func (r *entPostRepo) GetRelated(ctx context.Context, id uint64, limit int) ([]*postDomain.Post, error) {
+	source, err := r.client.Post.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	sourceTags := make(map[string]struct{})
+	for _, t := range source.Tags {
+		sourceTags[t] = struct{}{}
+	}
+
+	eps, err := r.client.Post.Query().
+		Where(post.StatusEQ(post.StatusPublished), post.IDNEQ(id)).
+		Order(ent.Desc(post.FieldCreatedAt)).
+		Limit(200).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	type scoredPost struct {
+		post  *postDomain.Post
+		score float64
+	}
+	scored := make([]scoredPost, 0, len(eps))
+	for _, ep := range eps {
+		if len(ep.Tags) == 0 && len(sourceTags) == 0 {
+			continue
+		}
+		intersection := 0
+		tagSet := make(map[string]struct{})
+		for _, t := range ep.Tags {
+			tagSet[t] = struct{}{}
+			if _, ok := sourceTags[t]; ok {
+				intersection++
+			}
+		}
+		union := len(sourceTags) + len(tagSet) - intersection
+		if union == 0 {
+			continue
+		}
+		score := float64(intersection) / float64(union)
+		if score > 0 {
+			scored = append(scored, scoredPost{post: toDomain(ep), score: score})
+		}
+	}
+
+	sort.Slice(scored, func(i, j int) bool {
+		if scored[i].score != scored[j].score {
+			return scored[i].score > scored[j].score
+		}
+		return scored[i].post.CreatedAt.After(scored[j].post.CreatedAt)
+	})
+
+	if limit > len(scored) {
+		limit = len(scored)
+	}
+	result := make([]*postDomain.Post, limit)
+	for i := 0; i < limit; i++ {
+		result[i] = scored[i].post
+	}
+
+	// batch fill author names
+	if len(result) > 0 {
+		authorIDs := make([]uint64, 0, len(result))
+		for _, p := range result {
+			authorIDs = append(authorIDs, p.AuthorID)
+		}
+		users, err := r.client.User.Query().Where(user.IDIn(authorIDs...)).All(ctx)
+		if err == nil {
+			userMap := make(map[uint64]string, len(users))
+			for _, u := range users {
+				userMap[u.ID] = u.Username
+			}
+			for _, p := range result {
+				if name, ok := userMap[p.AuthorID]; ok {
+					p.AuthorName = name
+				}
+			}
+		}
+	}
+
+	return result, nil
 }
 
 func toDomain(ep *ent.Post) *postDomain.Post {

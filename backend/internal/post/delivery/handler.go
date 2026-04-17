@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"strconv"
+	stderrors "errors"
 
 	"github.com/gin-gonic/gin"
 	"github.com/blog/blog-community/pkg/errors"
@@ -236,6 +237,32 @@ func (h *PostHandler) Publish(c *gin.Context) {
 	}
 
 	response.Success(c.Writer, toPostResponse(p, true))
+}
+
+func (h *PostHandler) GetRelated(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.Error(errors.ErrInvalidInput)
+		return
+	}
+
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "5"))
+	posts, err := h.useCase.GetRelated(c.Request.Context(), id, limit)
+	if err != nil {
+		if stderrors.Is(err, domain.ErrPostNotFound) {
+			c.Error(errors.ErrNotFound)
+			return
+		}
+		c.Error(errors.Wrap(err, errors.ErrInternal))
+		return
+	}
+
+	list := make([]postResponse, len(posts))
+	for i, p := range posts {
+		list[i] = toPostResponse(p, false)
+	}
+	response.Success(c.Writer, gin.H{"list": list})
 }
 
 func toPostResponse(p *domain.Post, withContent bool) postResponse {

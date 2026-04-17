@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { usePost } from "@/hooks/queries/use-posts";
+import { useRelatedPosts } from "@/hooks/queries/use-related-posts";
 import { useUserProfile } from "@/hooks/queries/use-user";
 import {
   useFollowStats,
@@ -24,6 +25,7 @@ export default function PostDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const { data: post, isLoading } = usePost(id);
+  const { data: relatedData } = useRelatedPosts(id, 5);
   const { user: me } = useAuthStore();
 
   const authorId = post?.authorId;
@@ -168,6 +170,42 @@ export default function PostDetailPage() {
           <div className="mt-6">
             <CommentSection postId={id} />
           </div>
+
+          {/* 相关推荐 */}
+          {relatedData && relatedData.list.length > 0 && (
+            <motion.div
+              className="mt-10 pt-8 border-t"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+            >
+              <h3 className="text-lg font-semibold mb-4">相关推荐</h3>
+              <div className="space-y-4">
+                {relatedData.list.map((relatedPost, index) => (
+                  <motion.div
+                    key={relatedPost.id}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.2, delay: index * 0.05 }}
+                  >
+                    <Link href={`/posts/${relatedPost.id}`} className="group block">
+                      <h4 className="text-sm font-medium group-hover:text-foreground/80 transition-colors line-clamp-2">
+                        {relatedPost.title}
+                      </h4>
+                      <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="truncate max-w-[120px]">
+                          {relatedPost.authorName || `用户 ${relatedPost.authorId}`}
+                        </span>
+                        <span>·</span>
+                        <span>👍 {relatedPost.likeCount ?? 0}</span>
+                        <span>👁 {relatedPost.viewCount ?? 0}</span>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
         </motion.article>
 
         {/* 右侧栏 */}

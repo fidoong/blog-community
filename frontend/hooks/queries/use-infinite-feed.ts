@@ -3,7 +3,7 @@ import apiClient from "@/lib/api-client";
 import type { Post } from "@/types/post";
 
 interface FeedParams {
-  type: "latest" | "hot";
+  type: "latest" | "hot" | "following";
   pageSize?: number;
   period?: "24h" | "7d" | "30d";
 }

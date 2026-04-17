@@ -46,14 +46,16 @@ type PostRepository interface {
 	Update(ctx context.Context, p *Post) error
 	Delete(ctx context.Context, id uint64) error
 	List(ctx context.Context, filter ListFilter) ([]*Post, int64, error)
+	GetRelated(ctx context.Context, id uint64, limit int) ([]*Post, error)
 }
 
 // ListFilter defines filtering options for post listing.
 type ListFilter struct {
-	Status   string
-	AuthorID uint64
-	Sort     string // "new", "hot"
-	Page     int
-	PageSize int
-	Keyword  string // search keyword for title/summary/tags
+	Status    string
+	AuthorID  uint64
+	AuthorIDs []uint64 // for following feed
+	Sort      string   // "new", "hot"
+	Page      int
+	PageSize  int
+	Keyword   string // search keyword for title/summary/tags
 }

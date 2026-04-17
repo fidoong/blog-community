@@ -88,6 +88,20 @@ func (r *EntFollowRepo) CountFollowing(ctx context.Context, userID uint64) (int6
 	return int64(c), err
 }
 
+func (r *EntFollowRepo) ListFollowingIDs(ctx context.Context, userID uint64) ([]uint64, error) {
+	items, err := r.client.Follow.Query().
+		Where(follow.FollowerIDEQ(userID)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]uint64, len(items))
+	for i, item := range items {
+		ids[i] = item.FollowingID
+	}
+	return ids, nil
+}
+
 func toDomainSlice(items []*ent.Follow) []*domain.Follow {
 	result := make([]*domain.Follow, len(items))
 	for i, f := range items {

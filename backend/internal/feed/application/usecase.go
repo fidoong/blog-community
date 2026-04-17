@@ -9,12 +9,13 @@ import (
 
 // feedUseCase implements domain.UseCase.
 type feedUseCase struct {
-	postLister domain.PostLister
+	postLister   domain.PostLister
+	followLister domain.FollowLister
 }
 
 // NewFeedUseCase creates a new feed usecase.
-func NewFeedUseCase(postLister domain.PostLister) domain.UseCase {
-	return &feedUseCase{postLister: postLister}
+func NewFeedUseCase(postLister domain.PostLister, followLister domain.FollowLister) domain.UseCase {
+	return &feedUseCase{postLister: postLister, followLister: followLister}
 }
 
 func (uc *feedUseCase) GetFeed(ctx context.Context, filter domain.FeedFilter) ([]*domain.FeedItem, int64, error) {
@@ -30,8 +31,7 @@ func (uc *feedUseCase) GetFeed(ctx context.Context, filter domain.FeedFilter) ([
 	case domain.FeedTypeHot:
 		return uc.getHotFeed(ctx, filter)
 	case domain.FeedTypeFollowing:
-		// TODO: implement following feed after follow system is built
-		return []*domain.FeedItem{}, 0, nil
+		return uc.getFollowingFeed(ctx, filter)
 	case domain.FeedTypeRecommend:
 		// TODO: implement recommend feed after recommendation algorithm is ready
 		return []*domain.FeedItem{}, 0, nil
@@ -61,6 +61,30 @@ func (uc *feedUseCase) getHotFeed(ctx context.Context, filter domain.FeedFilter)
 		Sort:     "hot",
 		Page:     filter.Page,
 		PageSize: filter.PageSize,
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+	return toFeedItems(posts), total, nil
+}
+
+func (uc *feedUseCase) getFollowingFeed(ctx context.Context, filter domain.FeedFilter) ([]*domain.FeedItem, int64, error) {
+	if filter.UserID == 0 {
+		return []*domain.FeedItem{}, 0, nil
+	}
+	followingIDs, err := uc.followLister.ListFollowingIDs(ctx, filter.UserID)
+	if err != nil {
+		return nil, 0, err
+	}
+	if len(followingIDs) == 0 {
+		return []*domain.FeedItem{}, 0, nil
+	}
+	posts, total, err := uc.postLister.List(ctx, postdomain.ListFilter{
+		Status:    postdomain.StatusPublished,
+		AuthorIDs: followingIDs,
+		Sort:      "new",
+		Page:      filter.Page,
+		PageSize:  filter.PageSize,
 	})
 	if err != nil {
 		return nil, 0, err

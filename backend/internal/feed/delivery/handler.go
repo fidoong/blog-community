@@ -7,6 +7,7 @@ import (
 	"github.com/blog/blog-community/pkg/errors"
 	"github.com/blog/blog-community/pkg/response"
 	"github.com/blog/blog-community/internal/feed/domain"
+	"github.com/blog/blog-community/pkg/middleware"
 )
 
 // FeedHandler handles HTTP requests for feed.
@@ -45,12 +46,19 @@ func (h *FeedHandler) GetFeed(c *gin.Context) {
 	feedType := c.DefaultQuery("type", "latest")
 	period := c.Query("period")
 
-	items, total, err := h.useCase.GetFeed(c.Request.Context(), domain.FeedFilter{
+	filter := domain.FeedFilter{
 		Type:     domain.FeedType(feedType),
 		Page:     page,
 		PageSize: pageSize,
 		Period:   period,
-	})
+	}
+
+	// Extract user ID from JWT for following feed
+	if claims, ok := middleware.GetAuthUser(c); ok {
+		filter.UserID = claims.UserID
+	}
+
+	items, total, err := h.useCase.GetFeed(c.Request.Context(), filter)
 	if err != nil {
 		c.Error(errors.Wrap(err, errors.ErrInternal))
 		return

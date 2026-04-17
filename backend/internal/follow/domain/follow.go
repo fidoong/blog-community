@@ -30,6 +30,7 @@ type Repository interface {
 	IsFollowing(ctx context.Context, followerID, followingID uint64) (bool, error)
 	ListFollowers(ctx context.Context, userID uint64, page, pageSize int) ([]*Follow, int64, error)
 	ListFollowing(ctx context.Context, userID uint64, page, pageSize int) ([]*Follow, int64, error)
+	ListFollowingIDs(ctx context.Context, userID uint64) ([]uint64, error)
 	CountFollowers(ctx context.Context, userID uint64) (int64, error)
 	CountFollowing(ctx context.Context, userID uint64) (int64, error)
 }

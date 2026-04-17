@@ -28,6 +28,11 @@ type PostLister interface {
 	List(ctx context.Context, filter postdomain.ListFilter) ([]*postdomain.Post, int64, error)
 }
 
+// FollowLister abstracts follow querying for feed generation.
+type FollowLister interface {
+	ListFollowingIDs(ctx context.Context, userID uint64) ([]uint64, error)
+}
+
 // FeedType defines supported feed types.
 type FeedType string
 
@@ -44,6 +49,7 @@ type FeedFilter struct {
 	Page     int
 	PageSize int
 	Period   string // "24h", "7d", "30d" for hot feed
+	UserID   uint64 // for following feed
 }
 
 // UseCase defines feed application operations.

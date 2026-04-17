@@ -11,7 +11,7 @@ import { PostCard, PostCardSkeleton } from "@/components/features/post-card";
 import { LeftNav } from "@/components/shared/left-nav";
 import { useAuthStore } from "@/stores/auth-store";
 
-type FeedTab = "recommend" | "hot" | "latest";
+type FeedTab = "following" | "hot" | "latest";
 
 const MOCK_TAGS = [
   { name: "Go", count: 1234 },
@@ -36,7 +36,7 @@ export default function HomePage() {
   const { user } = useAuthStore();
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  const feedType = activeTab === "hot" ? "hot" : "latest";
+  const feedType = activeTab === "hot" ? "hot" : activeTab === "following" ? "following" : "latest";
   const { 
     data, 
     isLoading, 
@@ -89,7 +89,7 @@ export default function HomePage() {
             <div className="flex-shrink-0 mb-4 pb-3 border-b">
               <div className="flex gap-6">
               {[
-                { key: "recommend", label: "推荐" },
+                { key: "following", label: "关注" },
                 { key: "latest", label: "最新" },
                 { key: "hot", label: "热榜" },
               ].map((tab) => (
@@ -117,13 +117,14 @@ export default function HomePage() {
 
           {/* 文章列表 - 独立滚动区域 */}
           <div className="flex-1 overflow-y-auto">
-            {activeTab === "recommend" && (
+            {activeTab === "following" && !user && (
               <div className="rounded-lg border border-dashed bg-muted/30 p-12 text-center">
-                <p className="text-sm text-muted-foreground">推荐流正在开发中，敬请期待 👷</p>
+                <p className="text-sm text-muted-foreground mb-4">登录后查看关注作者的最新文章</p>
+                <Button size="sm" onClick={() => window.location.href = "/login"}>去登录</Button>
               </div>
             )}
 
-            {activeTab !== "recommend" && (
+            {(activeTab !== "following" || user) && (
               <div className="divide-y">
                 {isLoading && (
                   <>

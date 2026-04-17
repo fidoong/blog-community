@@ -17,6 +17,7 @@ type UseCase interface {
 	Delete(ctx context.Context, id, authorID uint64, role string) error
 	List(ctx context.Context, filter domain.ListFilter) ([]*domain.Post, int64, error)
 	Publish(ctx context.Context, id, authorID uint64) (*domain.Post, error)
+	GetRelated(ctx context.Context, id uint64, limit int) ([]*domain.Post, error)
 }
 
 type postUseCase struct {
@@ -135,4 +136,11 @@ func (uc *postUseCase) Publish(ctx context.Context, id, authorID uint64) (*domai
 		return nil, errors.Wrap(err, errors.ErrInternal)
 	}
 	return p, nil
+}
+
+func (uc *postUseCase) GetRelated(ctx context.Context, id uint64, limit int) ([]*domain.Post, error) {
+	if limit < 1 || limit > 20 {
+		limit = 5
+	}
+	return uc.repo.GetRelated(ctx, id, limit)
 }

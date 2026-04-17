@@ -10,17 +10,19 @@ import (
 	"github.com/blog/blog-community/internal/ent"
 	application2 "github.com/blog/blog-community/internal/feed/application"
 	"github.com/blog/blog-community/internal/feed/delivery"
+	followinfra "github.com/blog/blog-community/internal/follow/infrastructure"
 	"github.com/blog/blog-community/internal/post/application"
-	"github.com/blog/blog-community/internal/post/infrastructure"
+	postinfra "github.com/blog/blog-community/internal/post/infrastructure"
 )
 
 // Injectors from wire.go:
 
 // InitializeHandler injects feed dependencies.
 func InitializeHandler(client *ent.Client) *delivery.FeedHandler {
-	postRepository := infrastructure.NewEntPostRepo(client)
+	postRepository := postinfra.NewEntPostRepo(client)
 	useCase := application.NewPostUseCase(postRepository)
-	domainUseCase := application2.NewFeedUseCase(useCase)
+	entFollowRepo := followinfra.NewEntFollowRepo(client)
+	domainUseCase := application2.NewFeedUseCase(useCase, entFollowRepo)
 	feedHandler := delivery.NewFeedHandler(domainUseCase)
 	return feedHandler
 }
