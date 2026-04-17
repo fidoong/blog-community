@@ -3,6 +3,13 @@
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { usePost } from "@/hooks/queries/use-posts";
+import { useUserProfile } from "@/hooks/queries/use-user";
+import {
+  useFollowStats,
+  useFollow,
+  useUnfollow,
+} from "@/hooks/queries/use-follow";
+import { useAuthStore } from "@/stores/auth-store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,6 +22,26 @@ export default function PostDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const { data: post, isLoading } = usePost(id);
+  const { user: me } = useAuthStore();
+
+  const authorId = post?.authorId;
+  const { data: author } = useUserProfile(authorId ?? "");
+  const { data: authorStats } = useFollowStats(authorId ?? "");
+
+  const followMutation = useFollow();
+  const unfollowMutation = useUnfollow();
+
+  const isMe = me?.id === authorId;
+  const isFollowing = authorStats?.isFollowing ?? false;
+
+  const handleFollowToggle = () => {
+    if (!authorId) return;
+    if (isFollowing) {
+      unfollowMutation.mutate(authorId);
+    } else {
+      followMutation.mutate(authorId);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -48,6 +75,36 @@ export default function PostDetailPage() {
       <Card>
         <CardContent className="p-6 md:p-8">
           <h1 className="mb-4 text-2xl font-bold md:text-3xl">{post.title}</h1>
+
+          {/* Author bar */}
+          <div className="mb-6 flex items-center justify-between rounded-lg bg-muted/50 p-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-sm font-bold">
+                {author?.username?.[0]?.toUpperCase() ?? "U"}
+              </div>
+              <div>
+                <Link
+                  href={`/user/${post.authorId}`}
+                  className="text-sm font-medium hover:text-primary"
+                >
+                  {author?.username ?? `用户 ${post.authorId}`}
+                </Link>
+                <div className="text-xs text-muted-foreground">
+                  {authorStats?.followersCount ?? 0} 粉丝
+                </div>
+              </div>
+            </div>
+            {me && !isMe && (
+              <Button
+                variant={isFollowing ? "outline" : "default"}
+                size="sm"
+                onClick={handleFollowToggle}
+                disabled={followMutation.isPending || unfollowMutation.isPending}
+              >
+                {isFollowing ? "已关注" : "关注"}
+              </Button>
+            )}
+          </div>
 
           <div className="mb-6 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
             {post.tags.map((tag) => (
