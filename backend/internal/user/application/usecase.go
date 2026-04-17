@@ -4,6 +4,7 @@ import (
 	"context"
 	stderrors "errors"
 
+	"github.com/lib/pq"
 	"github.com/blog/blog-community/pkg/errors"
 	"github.com/blog/blog-community/pkg/hashutil"
 	"github.com/blog/blog-community/internal/user/domain"
@@ -46,7 +47,12 @@ func (uc *userUseCase) Register(ctx context.Context, email, username, password s
 	}
 
 	if err := uc.repo.Create(ctx, u); err != nil {
-		// TODO: better duplicate key detection
+		if stderrors.Is(err, domain.ErrEmailAlreadyExist) {
+			return nil, domain.ErrEmailAlreadyExist
+		}
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
+			return nil, domain.ErrEmailAlreadyExist
+		}
 		return nil, errors.Wrap(err, errors.ErrInternal)
 	}
 	return u, nil

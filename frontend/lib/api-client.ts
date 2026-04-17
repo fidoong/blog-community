@@ -2,7 +2,7 @@ import ky from "ky";
 import { useAuthStore } from "@/stores/auth-store";
 
 const apiClient = ky.create({
-  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1",
+  prefix: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1",
   headers: { "Content-Type": "application/json" },
   timeout: 10000,
   hooks: {

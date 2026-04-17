@@ -6,6 +6,7 @@ import (
 	"github.com/blog/blog-community/internal/ent"
 	"github.com/blog/blog-community/internal/ent/user"
 	"github.com/blog/blog-community/internal/user/domain"
+	"github.com/blog/blog-community/pkg/database"
 )
 
 type entUserRepo struct {
@@ -18,7 +19,7 @@ func NewEntUserRepo(client *ent.Client) domain.UserRepository {
 }
 
 func (r *entUserRepo) Create(ctx context.Context, u *domain.User) error {
-	client := ExtractTx(ctx, r.client)
+	client := database.ExtractTx(ctx, r.client)
 	created, err := client.User.Create().
 		SetEmail(u.Email).
 		SetUsername(u.Username).
@@ -36,7 +37,7 @@ func (r *entUserRepo) Create(ctx context.Context, u *domain.User) error {
 }
 
 func (r *entUserRepo) GetByID(ctx context.Context, id uint64) (*domain.User, error) {
-	client := ExtractTx(ctx, r.client)
+	client := database.ExtractTx(ctx, r.client)
 	eu, err := client.User.Get(ctx, id)
 	if ent.IsNotFound(err) {
 		return nil, domain.ErrUserNotFound
@@ -48,7 +49,7 @@ func (r *entUserRepo) GetByID(ctx context.Context, id uint64) (*domain.User, err
 }
 
 func (r *entUserRepo) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
-	client := ExtractTx(ctx, r.client)
+	client := database.ExtractTx(ctx, r.client)
 	eu, err := client.User.Query().Where(user.Email(email)).Only(ctx)
 	if ent.IsNotFound(err) {
 		return nil, domain.ErrUserNotFound
@@ -60,7 +61,7 @@ func (r *entUserRepo) GetByEmail(ctx context.Context, email string) (*domain.Use
 }
 
 func (r *entUserRepo) GetByOAuth(ctx context.Context, provider, oauthID string) (*domain.User, error) {
-	client := ExtractTx(ctx, r.client)
+	client := database.ExtractTx(ctx, r.client)
 	eu, err := client.User.Query().
 		Where(user.OauthProviderEQ(user.OauthProvider(provider)), user.OauthID(oauthID)).
 		Only(ctx)
@@ -74,7 +75,7 @@ func (r *entUserRepo) GetByOAuth(ctx context.Context, provider, oauthID string) 
 }
 
 func (r *entUserRepo) Update(ctx context.Context, u *domain.User) error {
-	client := ExtractTx(ctx, r.client)
+	client := database.ExtractTx(ctx, r.client)
 	return client.User.UpdateOneID(u.ID).
 		SetUsername(u.Username).
 		SetAvatarURL(u.AvatarURL).

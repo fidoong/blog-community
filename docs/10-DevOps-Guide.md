@@ -160,8 +160,8 @@ GOOGLE_CLIENT_SECRET=xxx
 ### 3.3 常用命令
 
 ```bash
-# 运行服务
-go run cmd/user-service/main.go
+# 运行服务（当前为 Modular Monolith 阶段，统一入口）
+go run cmd/api-service/main.go
 
 # 热重载（需安装 air）
 air -c .air.toml

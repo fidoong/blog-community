@@ -10,7 +10,7 @@ build: build-backend build-frontend
 
 build-backend:
 	@echo "Building backend services..."
-	cd backend && go build -o bin/user-service ./cmd/user-service
+	cd backend && go build -o bin/api-service ./cmd/api-service
 
 build-frontend:
 	@echo "Building frontend..."
@@ -20,7 +20,7 @@ build-frontend:
 # Development
 # =======================
 dev-backend:
-	cd backend && go run ./cmd/user-service
+	cd backend && go run ./cmd/api-service
 
 dev-frontend:
 	cd frontend && pnpm dev
@@ -61,13 +61,22 @@ wire:
 	cd backend/internal/user && go run github.com/google/wire/cmd/wire@latest
 
 # =======================
-# Infrastructure
+# Infrastructure (Orb VM: fidoo)
 # =======================
-docker-up:
-	docker compose -f deployments/docker-compose.yml up -d
+infra-up:
+	cd scripts && bash deploy-infra.sh
 
-docker-down:
-	docker compose -f deployments/docker-compose.yml down
+infra-down:
+	ssh root@192.168.139.191 "cd /opt/blog-infra && docker compose down"
+
+infra-logs:
+	ssh root@192.168.139.191 "cd /opt/blog-infra && docker compose logs -f"
+
+infra-status:
+	ssh root@192.168.139.191 "cd /opt/blog-infra && docker compose ps"
+
+infra-pull:
+	ssh root@192.168.139.191 "cd /opt/blog-infra && docker compose pull"
 
 # =======================
 # Clean

@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/stores/auth-store";
 import type { Comment } from "@/types/comment";
 
-function CommentItem({ comment, postId, onReply }: { comment: Comment; postId: string | number; onReply: (parentId: number) => void }) {
+function CommentItem({ comment, onReply }: { comment: Comment; postId: string | number; onReply: (parentId: number) => void }) {
   return (
     <div className="py-3">
       <div className="flex items-start gap-3">
@@ -48,7 +48,7 @@ function CommentItem({ comment, postId, onReply }: { comment: Comment; postId: s
 }
 
 export function CommentSection({ postId }: { postId: string | number }) {
-  const { token, user } = useAuthStore();
+  const { token } = useAuthStore();
   const { data, isLoading } = useComments(postId);
   const createMutation = useCreateComment();
   const [content, setContent] = useState("");

@@ -47,7 +47,7 @@ func (h *CommentHandler) Create(c *gin.Context) {
 		return
 	}
 
-	postIDStr := c.Param("id")
+	postIDStr := c.Param("postId")
 	postID, err := strconv.ParseUint(postIDStr, 10, 64)
 	if err != nil {
 		c.Error(errors.ErrInvalidInput)

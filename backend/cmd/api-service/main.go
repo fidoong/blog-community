@@ -18,10 +18,15 @@ import (
 	"github.com/blog/blog-community/pkg/logger"
 	"github.com/blog/blog-community/pkg/middleware"
 	"github.com/blog/blog-community/internal/comment"
+	commentDelivery "github.com/blog/blog-community/internal/comment/delivery"
 	"github.com/blog/blog-community/internal/ent"
 	"github.com/blog/blog-community/internal/ent/migrate"
+	"github.com/blog/blog-community/internal/feed"
+	feedDelivery "github.com/blog/blog-community/internal/feed/delivery"
 	"github.com/blog/blog-community/internal/interaction"
+	interactionDelivery "github.com/blog/blog-community/internal/interaction/delivery"
 	"github.com/blog/blog-community/internal/post"
+	postDelivery "github.com/blog/blog-community/internal/post/delivery"
 	"github.com/blog/blog-community/internal/user"
 
 	_ "github.com/lib/pq"
@@ -60,11 +65,16 @@ func main() {
 	defer redisClient.Close()
 	tokenStore := auth.NewRedisTokenStore(redisClient)
 
-	// Wire up handlers
-	server := user.InitializeServer(cfg, client, tokenStore)
+	// Wire up handlers — each module owns its own route registration
+	userServer := user.InitializeServer(cfg, client, tokenStore)
 	postHandler := post.InitializeHandler(client)
 	commentHandler := comment.InitializeHandler(client)
 	interactionHandler := interaction.InitializeHandler(client, redisClient)
+
+	postServer := postDelivery.NewPostServer(postHandler)
+	feedServer := feedDelivery.NewFeedServer(feed.InitializeHandler(client))
+	commentServer := commentDelivery.NewCommentServer(commentHandler)
+	interactionServer := interactionDelivery.NewInteractionServer(interactionHandler)
 
 	// Setup router
 	r := gin.New()
@@ -81,29 +91,14 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	// API routes
+	// API routes — each module registers itself
 	api := r.Group("/api/v1")
 	authMiddleware := middleware.AuthRequired(cfg.JWTSecret)
-	server.Register(api, authMiddleware)
-
-	// Post routes
-	api.GET("/posts", postHandler.List)
-	api.GET("/posts/:id", postHandler.GetByID)
-	api.POST("/posts", authMiddleware, postHandler.Create)
-	api.PUT("/posts/:id", authMiddleware, postHandler.Update)
-	api.DELETE("/posts/:id", authMiddleware, postHandler.Delete)
-	api.POST("/posts/:id/publish", authMiddleware, postHandler.Publish)
-
-	// Comment routes
-	api.GET("/posts/:id/comments", commentHandler.List)
-	api.POST("/posts/:id/comments", authMiddleware, commentHandler.Create)
-	api.DELETE("/comments/:id", authMiddleware, commentHandler.Delete)
-
-	// Interaction routes
-	api.POST("/likes/:targetType/:targetId", authMiddleware, interactionHandler.ToggleLike)
-	api.GET("/likes/:targetType/:targetId", interactionHandler.GetLikeStatus)
-	api.POST("/collects/:targetType/:targetId", authMiddleware, interactionHandler.ToggleCollect)
-	api.GET("/collects/:targetType/:targetId", interactionHandler.GetCollectStatus)
+	userServer.Register(api, authMiddleware)
+	postServer.Register(api, authMiddleware)
+	feedServer.Register(api, authMiddleware)
+	commentServer.Register(api, authMiddleware)
+	interactionServer.Register(api, authMiddleware)
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.HTTPPort,
