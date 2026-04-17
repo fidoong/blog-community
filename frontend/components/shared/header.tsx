@@ -1,22 +1,32 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuthStore } from "@/stores/auth-store";
 import { useLogout } from "@/hooks/queries/use-auth";
-import { PenSquare } from "lucide-react";
+import { PenSquare, Search } from "lucide-react";
 
 export function Header() {
   const { user, refreshToken, logout } = useAuthStore();
   const logoutMutation = useLogout();
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleLogout = () => {
     if (refreshToken) {
       logoutMutation.mutate({ refreshToken });
     } else {
       logout();
+    }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = searchQuery.trim();
+    if (trimmed) {
+      window.location.href = `/search?q=${encodeURIComponent(trimmed)}`;
     }
   };
 
@@ -28,22 +38,29 @@ export function Header() {
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6 lg:px-8">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="text-xl font-bold tracking-tight hover:text-foreground/80 transition-colors">
+        <div className="flex items-center gap-6 lg:gap-8">
+          <Link href="/" className="text-xl font-bold tracking-tight hover:text-foreground/80 transition-colors shrink-0">
             BlogCommunity
           </Link>
-          <nav className="hidden gap-6 text-sm font-medium md:flex">
+          
+          {/* 搜索框 */}
+          <form onSubmit={handleSearch} className="hidden md:flex relative max-w-[280px] w-full">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="搜索文章..."
+              className="h-9 w-full rounded-lg border bg-muted/50 pl-9 pr-4 text-sm transition-colors focus:border-foreground focus:bg-background focus:outline-none focus:ring-1 focus:ring-foreground"
+            />
+          </form>
+          
+          <nav className="hidden gap-6 text-sm font-medium lg:flex">
             <Link 
               href="/" 
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               首页
-            </Link>
-            <Link 
-              href="/search" 
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              搜索
             </Link>
           </nav>
         </div>

@@ -55,4 +55,5 @@ type ListFilter struct {
 	Sort     string // "new", "hot"
 	Page     int
 	PageSize int
+	Keyword  string // search keyword for title/summary/tags
 }

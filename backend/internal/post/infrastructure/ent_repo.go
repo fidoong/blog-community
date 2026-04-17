@@ -83,6 +83,14 @@ func (r *entPostRepo) List(ctx context.Context, filter postDomain.ListFilter) ([
 	if filter.AuthorID > 0 {
 		q = q.Where(post.AuthorIDEQ(filter.AuthorID))
 	}
+	if filter.Keyword != "" {
+		q = q.Where(
+			post.Or(
+				post.TitleContains(filter.Keyword),
+				post.SummaryContains(filter.Keyword),
+			),
+		)
+	}
 
 	switch filter.Sort {
 	case "hot":

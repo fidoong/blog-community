@@ -9,6 +9,7 @@ interface ListPostsParams {
   sort?: "new" | "hot";
   status?: string;
   authorId?: string | number;
+  keyword?: string;
 }
 
 export function usePosts(params: ListPostsParams = {}) {
@@ -23,6 +24,7 @@ export function usePosts(params: ListPostsParams = {}) {
             sort: params.sort ?? "new",
             ...(params.status ? { status: params.status } : {}),
             ...(params.authorId ? { authorId: params.authorId } : {}),
+            ...(params.keyword ? { q: params.keyword } : {}),
           },
         })
         .json<PostsResponse>(),

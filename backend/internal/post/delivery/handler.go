@@ -166,12 +166,14 @@ func (h *PostHandler) List(c *gin.Context) {
 	sort := c.DefaultQuery("sort", "new")
 	status := c.Query("status")
 	authorIDStr := c.Query("authorId")
+	keyword := c.Query("q")
 
 	filter := domain.ListFilter{
 		Page:     page,
 		PageSize: pageSize,
 		Sort:     sort,
 		Status:   status,
+		Keyword:  keyword,
 	}
 
 	if authorIDStr != "" {
