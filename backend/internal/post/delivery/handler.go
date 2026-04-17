@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	stderrors "errors"
@@ -22,6 +23,11 @@ type PostHandler struct {
 
 func NewPostHandler(useCase application.UseCase) *PostHandler {
 	return &PostHandler{useCase: useCase}
+}
+
+// ReindexSearch proxies to usecase for startup reindexing.
+func (h *PostHandler) ReindexSearch(ctx context.Context) error {
+	return h.useCase.ReindexSearch(ctx)
 }
 
 type createPostRequest struct {

@@ -168,11 +168,16 @@ func (uc *postUseCase) Publish(ctx context.Context, id, authorID uint64) (*domai
 		return nil, errors.ErrForbidden
 	}
 
-	p.Status = domain.StatusPending
+	p.Status = domain.StatusPublished
 	p.PublishedAt = time.Now()
 
 	if err := uc.repo.Update(ctx, p); err != nil {
 		return nil, errors.Wrap(err, errors.ErrInternal)
+	}
+
+	// Sync to ES after publish
+	if uc.indexer != nil {
+		go uc.indexer.IndexPost(context.Background(), p.ID, p.AuthorName)
 	}
 
 	return p, nil

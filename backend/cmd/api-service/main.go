@@ -97,6 +97,16 @@ func main() {
 	interactionHandler := interaction.InitializeHandler(client, redisClient, notificationUC)
 	followHandler := follow.InitializeHandler(client, notificationUC)
 
+	// Reindex published posts to ES on startup
+	if esClient != nil {
+		log.Info("reindexing published posts to elasticsearch...")
+		if err := postHandler.ReindexSearch(ctx); err != nil {
+			log.Warn("failed to reindex posts", zap.Error(err))
+		} else {
+			log.Info("elasticsearch reindex completed")
+		}
+	}
+
 	postServer := postDelivery.NewPostServer(postHandler)
 	feedServer := feedDelivery.NewFeedServer(feed.InitializeHandler(client, redisClient))
 	followServer := followDelivery.NewFollowServer(followHandler)

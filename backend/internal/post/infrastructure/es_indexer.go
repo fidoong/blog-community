@@ -49,12 +49,12 @@ func (idx *PostIndexer) EnsureIndex(ctx context.Context) error {
 		},
 		"mappings": map[string]any{
 			"properties": map[string]any{
-				"id":            map[string]any{"type": "integer"},
+				"id":            map[string]any{"type": "long"},
 				"title":         map[string]any{"type": "text"},
 				"summary":       map[string]any{"type": "text"},
 				"content":       map[string]any{"type": "text"},
 				"tags":          map[string]any{"type": "keyword"},
-				"author_id":     map[string]any{"type": "integer"},
+				"author_id":     map[string]any{"type": "long"},
 				"author_name":   map[string]any{"type": "keyword"},
 				"status":        map[string]any{"type": "keyword"},
 				"view_count":    map[string]any{"type": "integer"},
